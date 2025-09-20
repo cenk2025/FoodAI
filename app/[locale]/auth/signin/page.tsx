@@ -1,10 +1,17 @@
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import { useLocale } from 'next-intl';
 
+const createClient = () => {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+};
+
 export default function SignInPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const locale = useLocale();
 
   const signInWithGoogle = async () => {

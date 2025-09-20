@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 
 export async function GET(req: Request, { params }: { params: { locale: string } }) {
   const { searchParams, origin } = new URL(req.url);
@@ -8,7 +8,23 @@ export async function GET(req: Request, { params }: { params: { locale: string }
   const next = searchParams.get('next');
 
   if (code) {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createServerClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    cookies: {
+      get(name) {
+        return cookies().get(name)?.value;
+      },
+      set(name, value, options) {
+        cookies().set(name, value, options);
+      },
+      remove(name, options) {
+        cookies().delete({ name, ...options });
+      }
+    }
+  }
+);
     await supabase.auth.exchangeCodeForSession(code);
   }
 
