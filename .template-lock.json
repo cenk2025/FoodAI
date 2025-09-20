@@ -1,0 +1,10 @@
+{
+  "lock": [
+    "app/[locale]/layout.tsx",
+    "components/shell/LocaleShell.tsx",
+    "styles/globals.css",
+    "middleware.ts",
+    "i18n/messages/fi.json",
+    "i18n/messages/en.json"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "brand": "FoodAi – Älykäs ruoka",
+  "tagline": "Alennukset Wolt / Foodora / ResQ – kaikki samassa paikassa.",
+  "search": {
+    "placeholder": "Etsi ruoka-alennuksia...",
+    "cta": "Etsi"
+  },
+  "nav": {
+    "home": "Etusivu",
+    "offers": "Tarjoukset",
+    "nearby": "Lähellä",
+    "dashboard": "Kojelauta",
+    "admin": "Admin"
+  },
+  "section": {
+    "featured": "Suositellut tarjoukset"
+  },
+  "card": {
+    "go": "Siirry tarjoukseen"
+  },
+  "auth": {
+    "signin": {
+      "label": "Kirjaudu",
+      "cta": "Kirjaudu sisään"
+    },
+    "signout": "Kirjaudu ulos",
+    "email": "Sähköposti",
+    "password": "Salasana",
+    "continue": {
+      "google": "Jatka Googlella"
+    }
+  },
+  "home": {
+    "chatbot": "FoodAi Chatbot"
+  }
+}

@@ -1,0 +1,4 @@
+conversion_id,provider_id,offer_id,clickout_id,gross_amount,commission_amount,currency,status,occurred_at
+conv_001,prov_1,offer_1,1001,25.99,2.60,EUR,approved,2025-09-15 14:30:00
+conv_002,prov_1,offer_2,1002,19.50,1.95,EUR,pending,2025-09-16 10:15:00
+conv_003,prov_2,offer_3,1003,32.75,3.28,EUR,approved,2025-09-16 16:45:00

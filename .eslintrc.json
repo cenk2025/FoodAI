@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "no-restricted-imports": ["error", {
+      "paths": [
+        {"name": "../styles/globals.css", "message": "Use '@/app/globals.css' only."},
+        {"name": "./styles/globals.css", "message": "Use '@/app/globals.css' only."},
+        {"name": "styles/globals.css", "message": "Use '@/app/globals.css' only."},
+        {"name": "../globals.css", "message": "Use '@/app/globals.css' only."}
+      ],
+      "patterns": ["**/styles/globals.css", "**/globals.css"]
+    }]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "app/nearby/page.tsx -> react-leaflet": {
+    "id": 29305,
+    "files": [
+      "static/chunks/d0deef33.414f5e0355024f0b.js",
+      "static/chunks/305.b169bd56f433e87c.js"
+    ]
+  },
+  "node_modules/@supabase/auth-js/dist/module/lib/helpers.js -> @supabase/node-fetch": {
+    "id": 80485,
+    "files": []
+  },
+  "node_modules/@supabase/functions-js/dist/module/helper.js -> @supabase/node-fetch": {
+    "id": 80485,
+    "files": []
+  },
+  "node_modules/@supabase/realtime-js/dist/module/RealtimeClient.js -> @supabase/node-fetch": {
+    "id": 80485,
+    "files": []
+  },
+  "node_modules/@supabase/storage-js/dist/module/lib/helpers.js -> @supabase/node-fetch": {
+    "id": 80485,
+    "files": []
+  }
+}

@@ -1,0 +1,21 @@
+import { redirect } from 'next/navigation';
+import '@/app/globals.css';
+import type { ReactNode } from 'react';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from 'sonner';
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  // Redirect to default locale but still provide HTML structure for validation
+  redirect('/fi');
+  
+  return (
+    <html lang="fi" suppressHydrationWarning>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+          <Toaster richColors />
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}

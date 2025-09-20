@@ -1,0 +1,36 @@
+{
+  "brand": "FoodAi – Smart food",
+  "tagline": "Discounts from Wolt / Foodora / ResQ — all in one place.",
+  "search": {
+    "placeholder": "Search food deals...",
+    "cta": "Search"
+  },
+  "nav": {
+    "home": "Home",
+    "offers": "Offers",
+    "nearby": "Nearby",
+    "dashboard": "Dashboard",
+    "admin": "Admin"
+  },
+  "section": {
+    "featured": "Featured offers"
+  },
+  "card": {
+    "go": "Go to deal"
+  },
+  "auth": {
+    "signin": {
+      "label": "Sign in",
+      "cta": "Sign in"
+    },
+    "signout": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "continue": {
+      "google": "Continue with Google"
+    }
+  },
+  "home": {
+    "chatbot": "FoodAi Chatbot"
+  }
+}

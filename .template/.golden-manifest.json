@@ -1,0 +1,16 @@
+{
+  "mustExist": [
+    "app/[locale]/layout.tsx",
+    "app/[locale]/page.tsx",
+    "app/(auth)/signin/page.tsx",
+    "middleware.ts",
+    "i18n/messages/fi.json",
+    "i18n/messages/en.json",
+    "lib/supabase/client.ts",
+    "components/nav/left-rail.tsx",
+    "components/nav/topbar.tsx",
+    "styles/globals.css",
+    "tailwind.config.ts",
+    "next.config.js"
+  ]
+}

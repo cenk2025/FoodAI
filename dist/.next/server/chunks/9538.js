@@ -1,0 +1,1 @@
+"use strict";exports.id=9538,exports.ids=[9538],exports.modules={69538:(t,e,r)=>{r.r(e),r.d(e,{default:()=>o});let o=(0,r(68570).createProxy)(String.raw`/Users/cenkyakinlar/Documents/Dokumentit – CenkAir - MacBook Air/DREAMWEAVER/FOODAI/components/favorite-button.tsx#default`)}};

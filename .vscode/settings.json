@@ -1,0 +1,6 @@
+{
+  "css.validate": false,
+  "tailwindCSS.emmetCompletions": true,
+  "editor.quickSuggestions": { "strings": true },
+  "css.lint.unknownAtRules": "ignore"
+}

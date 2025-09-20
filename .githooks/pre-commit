@@ -1,0 +1,6 @@
+#!/bin/sh
+changed=$(git diff --cached --name-only)
+echo "$changed" | grep -E '^(app/\\[locale\\]/layout\\.tsx|app/layout\\.tsx|middleware\\.ts|tailwind\\.config\\.ts)$' >/dev/null && {
+  echo "❌ Bu dosyalar şablon korumasında. OVERRIDE=1 ile onayla."
+  [ "$OVERRIDE" = "1" ] || exit 1
+}
