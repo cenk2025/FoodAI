@@ -10,6 +10,7 @@ declare namespace React {
 const React = require('react');
 const { setRequestLocale, getMessages } = require('next-intl/server');
 const { NextIntlClientProvider } = require('next-intl');
+const { AuthProvider } = require('@/components/auth-provider');
 
 const Navbar = require('@/components/nav/Navbar').default;
 const Footer = require('@/components/nav/Footer').default;
@@ -18,9 +19,6 @@ export function generateStaticParams() {
   // projenizdeki diller
   return [{locale: 'fi'}, {locale: 'en'}];
 }
-
-// (opsiyonel) bu segmenti SSG'ye zorlamak istersen:
-export const dynamic = 'force-static';
 
 export default async function LocaleLayout({
   children,
@@ -39,11 +37,13 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body>
         <NextIntlClientProvider messages={messages} locale={locale}>
-          <Navbar />
-          <div className="container">
-            <main className="min-h-[calc(100dvh-4rem)]">{children}</main>
-            <Footer />
-          </div>
+          <AuthProvider>
+            <Navbar />
+            <div className="container">
+              <main className="min-h-[calc(100dvh-4rem)]">{children}</main>
+              <Footer />
+            </div>
+          </AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>

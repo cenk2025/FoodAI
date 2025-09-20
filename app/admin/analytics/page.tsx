@@ -1,3 +1,5 @@
+'use client';
+
 import { createSupabaseServer } from '@/lib/supabase/server';
 
 // Dynamically import the chart components to avoid SSR issues

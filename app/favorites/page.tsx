@@ -12,7 +12,7 @@ const FavoriteButton = dynamicImport(() => import('@/components/favorite-button'
 
 // Make this page dynamic since it uses next-intl APIs outside [locale] directory
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = false;
 
 export default async function FavPage() {
   const t = await getTranslations();

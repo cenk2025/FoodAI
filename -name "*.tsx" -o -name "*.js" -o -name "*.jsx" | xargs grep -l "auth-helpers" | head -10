@@ -1,5 +1,0 @@
-[33m7a87c0a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Update project configuration and components
-[33m9edbc84[m Update .gitignore to prevent duplicate files
-[33m46b7e53[m Remove duplicate files with '2' suffix
-[33m0ef4465[m Update internationalization setup, authentication, and Vercel deployment configuration
-[33mbc85378[m Update Supabase auth to use @supabase/ssr and add Vercel config

@@ -10,9 +10,7 @@ const nextConfig = {
   output: 'standalone'          // Plesk için ideal
 };
 
-// next-intl configuration
-const withNextIntl = require('next-intl/plugin')(
-  './i18n/request.ts'
-);
+// next-intl configuration - using the correct import path
+const withNextIntl = require('next-intl/plugin')('./i18n/request.ts');
 
 module.exports = withNextIntl(nextConfig);

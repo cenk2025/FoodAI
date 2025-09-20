@@ -1,7 +1,8 @@
 'use client';
 
 import HeaderBar from '@/components/nav/HeaderBar';
-import {ThemeProvider} from 'next-themes';
+declare const require: any;
+const { ThemeProvider } = require('next-themes');
 
 export default function TestImports() {
   return (
