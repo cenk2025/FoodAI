@@ -43,3 +43,12 @@ node_modules/
 .next/
 .vercel/
 .env*
+node_modules/
+.next/
+dist/
+out/
+.vercel/
+.env*
+npm-debug.log*
+yarn-*.log
+pnpm-*.log

@@ -1,8 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 
-const DealChat = dynamic(() => import('@/components/ai/chat'), { ssr: false });
+const DealChat = dynamicImport(() => import('@/components/ai/chat'), { ssr: false });
+
+// Make this page dynamic since it uses next-intl APIs outside [locale] directory
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function Home() {
   const t = await getTranslations();

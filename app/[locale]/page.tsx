@@ -1,20 +1,9 @@
 import HomePage from '@/components/pages/HomePage';
-import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 
-export default function HomeLocale({ params }: { params: { locale: string } }) {
-  const locale = params.locale ?? 'fi';
-  // dev'de fallback
-  if (process.env.NODE_ENV === 'development' && (locale !== 'fi' && locale !== 'en')) {
-    redirect('/fi');
-  }
-  
-  // Log the current working directory in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log("[FoodAI] page.tsx LIVE from:", process.cwd());
-  }
-  
+// Optional: Force static generation for this page
+export const dynamic = 'force-static';
+
+export default async function HomeLocale({ params }: { params: { locale: string } }) {
   return <HomePage />;
 }
-
-// İsteğe bağlı: Verinin her zaman taze gelmesi için
-export const dynamic = 'force-dynamic';

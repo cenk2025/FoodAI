@@ -3,15 +3,21 @@ import { useEffect, useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export default function ResetConfirmPage() {
-  const r = useRouter(); const sp = useSearchParams();
+  const r = useRouter(); 
+  const sp = useSearchParams();
   const [ready,setReady]=useState(false);
-  const [pwd,setPwd]=useState(''); const [msg,setMsg]=useState('');
+  const [pwd,setPwd]=useState(''); 
+  const [msg,setMsg]=useState('');
 
   useEffect(()=>{
     (async()=>{
       // Supabase redirects with ?code=...&type=recovery
-      const code = sp.get('code');
+      const code = sp?.get('code');
       if (code) {
         const s = supabaseBrowser();
         const { error } = await s.auth.exchangeCodeForSession(code);
@@ -21,7 +27,7 @@ export default function ResetConfirmPage() {
     })();
   },[sp]);
 
-  const submit = async (e:any)=>{
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const s = supabaseBrowser();
     const { error } = await s.auth.updateUser({ password: pwd });
@@ -35,7 +41,7 @@ export default function ResetConfirmPage() {
       <h1 className="text-3xl font-bold">Uusi salasana</h1>
       <form onSubmit={submit} className="grid gap-3">
         <input type="password" className="border rounded-xl px-3 py-2" placeholder="Uusi salasana" value={pwd} onChange={e=>setPwd(e.target.value)} />
-        <button className="btn btn-primary">Tallenna</button>
+        <button className="btn btn-primary" type="submit">Tallenna</button>
       </form>
       {msg && <p className="text-sm opacity-80">{msg}</p>}
     </div>

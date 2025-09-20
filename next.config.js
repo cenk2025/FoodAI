@@ -4,8 +4,12 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   images: { unoptimized: true },
-  experimental: { turbo: {} },   // dev'de Turbopack
-  output: 'standalone'           // Plesk için ideal
+  experimental: { 
+    // Remove turbo since it's deprecated
+  },   
+  output: 'standalone',          // Plesk için ideal
+  // Set the correct root directory to avoid workspace inference issues
+  outputFileTracingRoot: __dirname
 };
 
 // next-intl configuration

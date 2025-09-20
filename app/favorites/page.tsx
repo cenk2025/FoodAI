@@ -2,9 +2,13 @@ import { createSupabaseServer } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import SmartImage from '@/components/smart-image';
-const FavoriteButton = dynamic(() => import('@/components/favorite-button'), { ssr: false });
+const FavoriteButton = dynamicImport(() => import('@/components/favorite-button'), { ssr: false });
+
+// Make this page dynamic since it uses next-intl APIs outside [locale] directory
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function FavPage() {
   const t = await getTranslations();
