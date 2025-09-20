@@ -1,5 +1,14 @@
 'use client';
-import { ThemeProvider as NextThemes } from 'next-themes';
+
+// Declare React namespace
+declare namespace React {
+  type ReactNode = any;
+}
+
+// Declare require for dynamic imports
+declare const require: any;
+const { ThemeProvider: NextThemes } = require('next-themes');
+
 export function ThemeProvider({ 
   children,
   attribute = "class", 

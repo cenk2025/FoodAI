@@ -12,16 +12,16 @@ export default function DashboardPage() {
   const router = useRouter();
   const sb = createSupabaseBrowser();
   
-  const [filters, setFilters] = useState<OfferFilters>({});
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const [filters, setFilters] = useState({} as OfferFilters);
+  const [offers, setOffers] = useState([] as Offer[]);
 
   // örnek setterler:
-  const setCity = (v: string) => setFilters((f) => ({...f, city: v}));
-  const setCuisine = (v: string) => setFilters((f) => ({...f, cuisine: v}));
-  const setDiscountMin = (v: number) => setFilters((f)=>({...f, discount_min: v}));
-  const setPriceMax = (v: number) => setFilters((f)=>({...f, price_max: v}));
-  const setPickup = (v: boolean) => setFilters((f)=>({...f, pickup: v}));
-  const setDelivery = (v: boolean) => setFilters((f)=>({...f, delivery: v}));
+  const setCity = (v: string) => setFilters((f: OfferFilters) => ({...f, city: v}));
+  const setCuisine = (v: string) => setFilters((f: OfferFilters) => ({...f, cuisine: v}));
+  const setDiscountMin = (v: number) => setFilters((f: OfferFilters)=>({...f, discount_min: v}));
+  const setPriceMax = (v: number) => setFilters((f: OfferFilters)=>({...f, price_max: v}));
+  const setPickup = (v: boolean) => setFilters((f: OfferFilters)=>({...f, pickup: v}));
+  const setDelivery = (v: boolean) => setFilters((f: OfferFilters)=>({...f, delivery: v}));
 
   // Fetch offers based on filters
   useEffect(() => {
@@ -50,46 +50,46 @@ export default function DashboardPage() {
           className="input border rounded-xl px-3 py-2" 
           placeholder="City" 
           value={filters.city ?? ''} 
-          onChange={(e)=>setCity(e.target.value)} 
+          onChange={(e: any)=>setCity(e.target.value)} 
         />
         <input 
           className="input border rounded-xl px-3 py-2" 
           placeholder="Cuisine" 
           value={filters.cuisine ?? ''} 
-          onChange={(e)=>setCuisine(e.target.value)} 
+          onChange={(e: any)=>setCuisine(e.target.value)} 
         />
         <input 
           className="input border rounded-xl px-3 py-2" 
           type="number" 
           placeholder="Min. discount %" 
           value={filters.discount_min ?? ''} 
-          onChange={(e)=>setDiscountMin(Number(e.target.value) || 0)} 
+          onChange={(e: any)=>setDiscountMin(Number(e.target.value) || 0)} 
         />
         <input 
           className="input border rounded-xl px-3 py-2" 
           type="number" 
           placeholder="Max. price" 
           value={filters.price_max ?? ''} 
-          onChange={(e)=>setPriceMax(Number(e.target.value) || 0)} 
+          onChange={(e: any)=>setPriceMax(Number(e.target.value) || 0)} 
         />
         <label className="flex items-center gap-2">
           <input 
             type="checkbox" 
             checked={!!filters.pickup} 
-            onChange={(e)=>setPickup(e.target.checked)} 
+            onChange={(e: any)=>setPickup(e.target.checked)} 
           /> Pickup
         </label>
         <label className="flex items-center gap-2">
           <input 
             type="checkbox" 
             checked={!!filters.delivery} 
-            onChange={(e)=>setDelivery(e.target.checked)} 
+            onChange={(e: any)=>setDelivery(e.target.checked)} 
           /> Delivery
         </label>
       </div>
 
       <ul className="mt-6">
-        {offers.map((o)=>(
+        {offers.map((o: Offer)=>(
           <li key={o.id} className="border rounded-xl p-3 mb-2">
             <a href={`/go/${o.id}`} className="link">
               {o.title} — {o.city}

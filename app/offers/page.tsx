@@ -30,7 +30,7 @@ type OfferIndex = Pick<
 
 export default function OffersPage() {
   const sb = createSupabaseBrowser();
-  const [offers, setOffers] = useState<OfferIndex[]>([]); // <— önemli
+  const [offers, setOffers] = useState([] as OfferIndex[]); // <— önemli
 
   useEffect(() => {
     (async () => {
@@ -44,7 +44,7 @@ export default function OffersPage() {
 
   return (
     <ul className="grid gap-4">
-      {offers.map((o) => (
+      {offers.map((o: OfferIndex) => (
         <li key={o.id}>
           <span>{o.title}</span> — <span>{o.city}</span>
         </li>

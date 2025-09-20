@@ -1,12 +1,24 @@
 import { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+
+// Declare the module since we can't resolve the types
+declare const require: any;
+const { createClient } = require('@supabase/supabase-js');
 import { Database } from '@/types/supabase';
+
+// Declare process for TypeScript
+declare const process: {
+  env: {
+    CRON_TOKEN: string;
+    NEXT_PUBLIC_SUPABASE_URL: string;
+    SUPABASE_SERVICE_ROLE: string;
+  };
+};
 
 export async function POST(req: Request) {
   const token = req.headers.get('x-cron-token');
   if (token !== process.env.CRON_TOKEN) return new Response('Unauthorized', {status: 401});
   
-  const admin = createClient<Database>(
+  const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE!
   );

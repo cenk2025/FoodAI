@@ -30,9 +30,9 @@ export default async function Analytics() {
   
   // Fetch analytics data
   const [byProv, byCity, revenue] = await Promise.all([
-    s.rpc('admin_clicks_by_provider').then(r => r.data || []) as Promise<ProviderClicks[]>,
-    s.rpc('admin_clicks_by_city').then(r => r.data || []) as Promise<CityClicks[]>,
-    s.rpc('admin_revenue_30d').then(r => r.data || []) as Promise<RevenueData[]>
+    s.rpc('admin_clicks_by_provider').then((r: any) => r.data || []) as Promise<ProviderClicks[]>,
+    s.rpc('admin_clicks_by_city').then((r: any) => r.data || []) as Promise<CityClicks[]>,
+    s.rpc('admin_revenue_30d').then((r: any) => r.data || []) as Promise<RevenueData[]>
   ]);
 
   return (

@@ -6,7 +6,9 @@
     "build": "next build",
     "start": "next start -p 3001"
   },
-  "engines": { "node": ">=20 <21" },
+  "engines": {
+    "node": ">=20 <21"
+  },
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/react-slot": "^1.2.3",
@@ -33,8 +35,8 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "@types/node": "^20.19.16",
-    "@types/react": "^18.3.24",
+    "@types/node": "20.19.17",
+    "@types/react": "18.3.24",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
     "cross-env": "^10.0.0",

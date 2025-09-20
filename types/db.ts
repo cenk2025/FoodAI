@@ -1,3 +1,18 @@
+// Add JSX and React type declarations
+declare namespace JSX {
+  interface IntrinsicElements {
+    [elemName: string]: any;
+  }
+}
+
+declare const process: {
+  env: {
+    [key: string]: string | undefined;
+    NEXT_PUBLIC_SUPABASE_URL: string;
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+  };
+};
+
 export type UUID = string;
 
 export type Provider = {

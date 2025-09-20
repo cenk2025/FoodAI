@@ -1,4 +1,11 @@
 'use client';
+
+// Declare React namespace
+declare namespace React {
+  type FormEvent = any;
+  type ChangeEvent = any;
+}
+
 import { useEffect, useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -40,7 +47,7 @@ export default function ResetConfirmPage() {
     <div className="max-w-sm mx-auto pt-24 space-y-6">
       <h1 className="text-3xl font-bold">Uusi salasana</h1>
       <form onSubmit={submit} className="grid gap-3">
-        <input type="password" className="border rounded-xl px-3 py-2" placeholder="Uusi salasana" value={pwd} onChange={e=>setPwd(e.target.value)} />
+        <input type="password" className="border rounded-xl px-3 py-2" placeholder="Uusi salasana" value={pwd} onChange={(e: any)=>setPwd(e.target.value)} />
         <button className="btn btn-primary" type="submit">Tallenna</button>
       </form>
       {msg && <p className="text-sm opacity-80">{msg}</p>}

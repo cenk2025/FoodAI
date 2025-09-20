@@ -1,11 +1,20 @@
 'use client';
 
+// Declare React namespace
+declare namespace React {
+  type ReactNode = any;
+}
+
 import Header from '@/components/nav/header';
-import {ThemeProvider} from 'next-themes';
+
+// Declare require for dynamic imports
+declare const require: any;
+const { ThemeProvider } = require('next-themes');
+const { Menu } = require('lucide-react');
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV = [

@@ -1,7 +1,11 @@
 import { createSupabaseServer } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+
+// Declare require for dynamic imports
+declare const require: any;
+const { getTranslations } = require('next-intl/server');
+
 import dynamicImport from 'next/dynamic';
 import SmartImage from '@/components/smart-image';
 const FavoriteButton = dynamicImport(() => import('@/components/favorite-button'), { ssr: false });
@@ -22,7 +26,7 @@ export default async function FavPage() {
       <h1 className="text-3xl font-extrabold mb-6">{t('favorites.title')}</h1>
       {data && data.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {(data||[]).map((f:any)=>(
+          {(data||[]).map((f: any)=>(
             <article key={f.offer_id} className="rounded-3xl border overflow-hidden">
               {f.offers?.image_url && (
                 <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">

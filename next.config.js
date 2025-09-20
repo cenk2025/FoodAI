@@ -7,9 +7,7 @@ const nextConfig = {
   experimental: { 
     // Remove turbo since it's deprecated
   },   
-  output: 'standalone',          // Plesk için ideal
-  // Set the correct root directory to avoid workspace inference issues
-  outputFileTracingRoot: __dirname
+  output: 'standalone'          // Plesk için ideal
 };
 
 // next-intl configuration

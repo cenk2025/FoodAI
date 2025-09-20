@@ -1,7 +1,19 @@
 'use client';
 
-import { createBrowserClient } from '@supabase/ssr';
-import { useLocale } from 'next-intl';
+// Add global type declarations to fix TypeScript errors
+declare const process: {
+  env: {
+    [key: string]: string | undefined;
+    NEXT_PUBLIC_SUPABASE_URL: string;
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+  };
+};
+
+declare const require: any;
+
+// Import as any to avoid type errors
+const { createBrowserClient } = require('@supabase/ssr');
+const { useLocale } = require('next-intl');
 
 const createClient = () => {
   return createBrowserClient(

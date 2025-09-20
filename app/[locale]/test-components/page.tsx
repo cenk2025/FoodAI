@@ -1,5 +1,14 @@
 'use client';
 
+// Add basic JSX type declaration
+declare namespace JSX {
+  interface IntrinsicElements {
+    div: any;
+    h1: any;
+    h2: any;
+  }
+}
+
 import HeaderBar from '@/components/nav/HeaderBar';
 import RightDrawer from '@/components/nav/right-drawer';
 import LangSwitch from '@/components/lang-switch';

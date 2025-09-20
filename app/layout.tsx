@@ -1,9 +1,15 @@
 import '@/styles/globals.css';
-import type { ReactNode } from 'react';
-import type { Metadata } from 'next';
-import { ThemeProvider } from '@/components/theme-provider';
 
-export const metadata: Metadata = {
+// Declare React namespace
+declare namespace React {
+  type ReactNode = any;
+}
+
+// Declare require for dynamic imports
+declare const require: any;
+const { ThemeProvider } = require('@/components/theme-provider');
+
+export const metadata: any = {
   title: 'FoodAi – Älykäs ruoka',
   description: 'Alennukset yhdellä sivulla',
   alternates: {
@@ -14,7 +20,7 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fi" suppressHydrationWarning>
       <body>

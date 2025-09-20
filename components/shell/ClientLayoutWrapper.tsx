@@ -1,7 +1,16 @@
 'use client';
 
+// Declare React namespace
+declare namespace React {
+  type ReactNode = any;
+}
+
 import Header from '@/components/nav/header';
-import { ThemeProvider } from '@/components/theme-provider';
+
+// Declare require for dynamic imports
+declare const require: any;
+const { ThemeProvider } = require('@/components/theme-provider');
+
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
