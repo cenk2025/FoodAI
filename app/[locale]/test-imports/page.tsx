@@ -1,6 +1,5 @@
 'use client';
 
-import { Sidebar } from '@/components/nav/Sidebar';
 import HeaderBar from '@/components/nav/HeaderBar';
 import {ThemeProvider} from 'next-themes';
 

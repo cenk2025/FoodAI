@@ -1,6 +1,5 @@
 'use client';
 
-import { Sidebar } from '@/components/nav/Sidebar';
 import HeaderBar from '@/components/nav/HeaderBar';
 import RightDrawer from '@/components/nav/right-drawer';
 import LangSwitch from '@/components/lang-switch';
@@ -13,13 +12,6 @@ export default function TestComponents() {
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">HeaderBar</h2>
         <HeaderBar />
-      </div>
-      
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Sidebar</h2>
-        <div className="flex">
-          <Sidebar />
-        </div>
       </div>
       
       <div className="space-y-4">

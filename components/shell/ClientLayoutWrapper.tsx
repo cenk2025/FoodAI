@@ -1,7 +1,6 @@
 'use client';
 
-import { Sidebar } from '@/components/nav/Sidebar';
-import Header from '@/components/nav/Header';
+import Header from '@/components/nav/header';
 import { ThemeProvider } from '@/components/theme-provider';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -29,15 +28,13 @@ export default function ClientLayoutWrapper({ children }: { children: React.Reac
         <Navbar />
         
         <div className="flex flex-1">
-          <Sidebar />
-          <Header onOpenMobile={() => setSidebarOpen(true)} />
+          <Header />
 
           {/* ↓ içerik sarmalayıcısı */}
           <div
             className="
               relative z-0
               pt-16
-              pl-[var(--sb-collapsed)]   /* ← her breakpoint'te sabit */
               flex-grow
             "
           >
@@ -59,7 +56,7 @@ export default function ClientLayoutWrapper({ children }: { children: React.Reac
         )}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-[var(--sb-collapsed)] bg-card border-r transform transition-transform duration-300 ease-in-out lg:hidden",
+            "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-300 ease-in-out lg:hidden",
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >

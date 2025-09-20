@@ -44,6 +44,7 @@ export default function Footer() {
           </div>
           
           <div className="mt-4 md:mt-0">
+            {/* Kieli: <Link href={`/${locale==='fi'?'en':'fi'}`}>{locale==='fi'?'EN':'FI'}</Link> */}
             <LocaleSwitcher />
           </div>
         </div>

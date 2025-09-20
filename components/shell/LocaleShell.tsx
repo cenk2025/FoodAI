@@ -1,7 +1,6 @@
 'use client';
 
-import { Sidebar } from '@/components/nav/Sidebar';
-import Header from '@/components/nav/Header';
+import Header from '@/components/nav/header';
 import {ThemeProvider} from 'next-themes';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -24,16 +23,12 @@ export default function LocaleShell({children}:{children:React.ReactNode}) {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <div className="min-h-dvh bg-background text-foreground">
-        <Sidebar />
-
-        <Header onOpenMobile={() => setSidebarOpen(true)} />
+        <Header />
 
         {/* MAIN */}
         <div
           className="
             pt-16
-            pl-[var(--sb-collapsed)]
-            lg:pl-[var(--sb-collapsed)]
           "
         >
           <main className="w-full max-w-7xl mx-auto px-4 py-8">
@@ -50,7 +45,7 @@ export default function LocaleShell({children}:{children:React.ReactNode}) {
         )}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-[var(--sb-collapsed)] bg-card border-r transform transition-transform duration-300 ease-in-out lg:hidden",
+            "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-300 ease-in-out lg:hidden",
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >

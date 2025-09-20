@@ -24,8 +24,6 @@
     --input: 240 5.9% 90%;
     --ring: 221 83% 53%;
     --radius: 0.5rem;
-    --sb: 240px;           /* açık menü */
-    --sb-collapsed: 64px;  /* kapalı menü (ikon barı) */
   }
 
   .dark {
@@ -62,5 +60,5 @@
 
 /* Custom styles */
 html, body {
-  overflow-x: hidden; /* hover genişlemesinde yatay kaymayı engelle */
+  overflow-x: hidden;
 }
