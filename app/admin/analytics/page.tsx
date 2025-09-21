@@ -1,4 +1,4 @@
-'use client';
+// Remove the 'use client' directive since we're fetching data server-side
 
 import { createSupabaseServer } from '@/lib/supabase/server';
 

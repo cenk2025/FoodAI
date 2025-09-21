@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { supabaseBrowser } from '@/lib/supabase/client';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = false;
+export const revalidate = 0; // Changed from false to 0 to see if this resolves the issue
 export const fetchCache = 'force-no-store';
 
 function TestAuthRevalidateContent() {

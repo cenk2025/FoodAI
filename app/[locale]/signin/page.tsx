@@ -4,8 +4,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase/browser';
 import { useLocale } from 'next-intl';
+import { Suspense } from 'react';
 
-export default function SignInPage() {
+function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const locale = useLocale(); // Use next-intl hook for better locale handling
@@ -49,5 +50,13 @@ export default function SignInPage() {
         }
       </button>
     </main>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignInContent />
+    </Suspense>
   );
 }

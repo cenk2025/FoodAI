@@ -1,8 +1,9 @@
 'use client';
 
 declare const require: any;
+import React from 'react';
 
-export default function TestAuthModule() {
+function TestAuthModuleContent() {
   let authProviderModule;
   let AuthProvider;
   let error;
@@ -26,5 +27,13 @@ export default function TestAuthModule() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function TestAuthModule() {
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <TestAuthModuleContent />
+    </React.Suspense>
   );
 }

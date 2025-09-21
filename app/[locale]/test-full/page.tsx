@@ -1,6 +1,9 @@
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
-export default async function TestFull() {
+export default async function TestFull({ params }: { params: { locale: string } }) {
+  // Enable static rendering by setting the locale
+  setRequestLocale(params.locale);
+  
   const t = await getTranslations('section');
   
   return (

@@ -1,8 +1,9 @@
 'use client';
 
 import { useTheme } from 'next-themes';
+import React from 'react';
 
-export default function TestThemePage() {
+function TestThemeContent() {
   const { theme, setTheme } = useTheme();
   
   return (
@@ -13,5 +14,13 @@ export default function TestThemePage() {
         Toggle Theme
       </button>
     </div>
+  );
+}
+
+export default function TestThemePage() {
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <TestThemeContent />
+    </React.Suspense>
   );
 }

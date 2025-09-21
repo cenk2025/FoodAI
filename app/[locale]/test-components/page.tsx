@@ -12,8 +12,9 @@ declare namespace JSX {
 import HeaderBar from '@/components/nav/HeaderBar';
 import RightDrawer from '@/components/nav/right-drawer';
 import LangSwitch from '@/components/lang-switch';
+import React from 'react';
 
-export default function TestComponents() {
+function TestComponentsContent() {
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Component Test Page</h1>
@@ -33,5 +34,13 @@ export default function TestComponents() {
         <LangSwitch />
       </div>
     </div>
+  );
+}
+
+export default function TestComponents() {
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <TestComponentsContent />
+    </React.Suspense>
   );
 }

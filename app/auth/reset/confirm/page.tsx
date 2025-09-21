@@ -6,7 +6,7 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = false;
+export const revalidate = 0; // Changed from false to 0
 export const fetchCache = 'force-no-store';
 
 function ResetConfirmContent() {

@@ -2,8 +2,9 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import React from 'react';
 
-export function LocaleSwitcher() {
+function LocaleSwitcherContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -34,5 +35,13 @@ export function LocaleSwitcher() {
         EN
       </button>
     </div>
+  );
+}
+
+export function LocaleSwitcher() {
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <LocaleSwitcherContent />
+    </React.Suspense>
   );
 }
