@@ -23,12 +23,11 @@
     "paths": {
       "@/*": ["./*"],
       "@/types/*": ["types/*"]
-    }
+    },
+    "typeRoots": ["./node_modules/@types"]
   },
   "include": [
     "next-env.d.ts",
-    "types.d.ts",
-    "types/**/*.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
