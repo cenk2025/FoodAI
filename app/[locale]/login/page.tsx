@@ -1,13 +1,13 @@
 "use client"
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 import { useState } from 'react'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
-
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')

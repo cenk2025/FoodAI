@@ -10,10 +10,10 @@ declare namespace React {
 const React = require('react');
 const { setRequestLocale, getMessages } = require('next-intl/server');
 const { NextIntlClientProvider } = require('next-intl');
-const { AuthProvider } = require('@/components/auth-provider');
 
 const Navbar = require('@/components/nav/Navbar').default;
 const Footer = require('@/components/nav/Footer').default;
+import Providers from '@/components/providers/Providers';
 
 export function generateStaticParams() {
   // projenizdeki diller
@@ -37,13 +37,13 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body>
         <NextIntlClientProvider messages={messages} locale={locale}>
-          <AuthProvider>
+          <Providers>
             <Navbar />
             <div className="container">
               <main className="min-h-[calc(100dvh-4rem)]">{children}</main>
               <Footer />
             </div>
-          </AuthProvider>
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>
