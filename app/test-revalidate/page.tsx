@@ -1,5 +1,5 @@
-export const revalidate = 0; // Changed from false to 0
+export const revalidate = 0;
 
 export default function TestRevalidate() {
-  return <div>Test</div>;
+  return <div>Test Revalidate</div>;
 }

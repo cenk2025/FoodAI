@@ -3,11 +3,11 @@
 import { createSupabaseServer } from '@/lib/supabase/server';
 
 // Dynamically import the chart components to avoid SSR issues
-import dynamicImport from 'next/dynamic';
+// import dynamicImport from 'next/dynamic';
 
-const ProviderClicksChart = dynamicImport(() => import('@/components/admin/RechartsWrapper').then(mod => mod.ProviderClicksChart), { ssr: false });
-const CityClicksChart = dynamicImport(() => import('@/components/admin/RechartsWrapper').then(mod => mod.CityClicksChart), { ssr: false });
-const RevenueChart = dynamicImport(() => import('@/components/admin/RechartsWrapper').then(mod => mod.RevenueChart), { ssr: false });
+// const ProviderClicksChart = dynamicImport(() => import('@/components/admin/RechartsWrapper').then(mod => mod.ProviderClicksChart), { ssr: false });
+// const CityClicksChart = dynamicImport(() => import('@/components/admin/RechartsWrapper').then(mod => mod.CityClicksChart), { ssr: false });
+// const RevenueChart = dynamicImport(() => import('@/components/admin/RechartsWrapper').then(mod => mod.RevenueChart), { ssr: false });
 
 export const dynamic = 'force-dynamic';
 
@@ -43,17 +43,20 @@ export default async function Analytics() {
 
       <section>
         <h2 className="text-xl font-bold mb-2">Clicks by Provider (30d)</h2>
-        <ProviderClicksChart data={byProv} />
+        <p>Chart temporarily disabled due to dependency issues</p>
+        {/* <ProviderClicksChart data={byProv} /> */}
       </section>
 
       <section>
         <h2 className="text-xl font-bold mb-2">Clicks by City (30d)</h2>
-        <CityClicksChart data={byCity} />
+        <p>Chart temporarily disabled due to dependency issues</p>
+        {/* <CityClicksChart data={byCity} /> */}
       </section>
 
       <section>
         <h2 className="text-xl font-bold mb-2">Revenue (30d)</h2>
-        <RevenueChart data={revenue} />
+        <p>Chart temporarily disabled due to dependency issues</p>
+        {/* <RevenueChart data={revenue} /> */}
       </section>
     </div>
   );

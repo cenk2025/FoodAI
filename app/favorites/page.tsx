@@ -6,9 +6,8 @@ import { redirect } from 'next/navigation';
 declare const require: any;
 const { getTranslations } = require('next-intl/server');
 
-import dynamicImport from 'next/dynamic';
 import SmartImage from '@/components/smart-image';
-const FavoriteButton = dynamicImport(() => import('@/components/favorite-button'), { ssr: false });
+import FavoriteButtonWrapper from '@/components/favorite-button-wrapper';
 
 // Make this page dynamic since it uses next-intl APIs outside [locale] directory
 export const dynamic = 'force-dynamic';
@@ -48,7 +47,7 @@ export default async function FavPage() {
                 </div>
                 <div className="flex gap-2">
                   <a className="btn btn-primary flex-1" href={`/go/${f.offer_id}`}>{t('offers.cta')}</a>
-                  {FavoriteButton && <FavoriteButton offerId={f.offer_id} />}
+                  <FavoriteButtonWrapper offerId={f.offer_id} />
                 </div>
               </div>
             </article>

@@ -2,6 +2,10 @@
 
 import { useTranslations } from 'next-intl';
 
+export const dynamic = 'force-static'; // Tamamen statik metin gösteriyorsa
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export default function ExamplePage() {
   const t = useTranslations('home');
   
