@@ -33,6 +33,12 @@ export default function SettingsPage() {
     const [priceAlerts, setPriceAlerts] = useState(true)
     const [newsletter, setNewsletter] = useState(false)
 
+    // Password change states
+    const [newPassword, setNewPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [passwordSaving, setPasswordSaving] = useState(false)
+    const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
     useEffect(() => {
         const supabase = createClient()
 
@@ -78,6 +84,37 @@ export default function SettingsPage() {
             setMessage({ type: 'error', text: 'Päivitys epäonnistui. Yritä uudelleen.' })
         } finally {
             setSaving(false)
+        }
+    }
+
+    const handlePasswordChange = async () => {
+        if (!newPassword || !confirmPassword) {
+            setPasswordMessage({ type: 'error', text: 'Täytä kaikki kentät' })
+            return
+        }
+        if (newPassword !== confirmPassword) {
+            setPasswordMessage({ type: 'error', text: 'Salasanat eivät täsmää' })
+            return
+        }
+        if (newPassword.length < 8) {
+            setPasswordMessage({ type: 'error', text: 'Salasanan on oltava vähintään 8 merkkiä pitkä' })
+            return
+        }
+        setPasswordSaving(true)
+        setPasswordMessage(null)
+        try {
+            const supabase = createClient()
+            const { error } = await supabase.auth.updateUser({ password: newPassword })
+            if (error) throw error
+            setPasswordMessage({ type: 'success', text: 'Salasana vaihdettu onnistuneesti!' })
+            setNewPassword('')
+            setConfirmPassword('')
+            setTimeout(() => setPasswordMessage(null), 3000)
+        } catch (error) {
+            console.error('Error updating password:', error)
+            setPasswordMessage({ type: 'error', text: 'Salasanan vaihto epäonnistui. Yritä uudelleen.' })
+        } finally {
+            setPasswordSaving(false)
         }
     }
 
@@ -183,6 +220,60 @@ export default function SettingsPage() {
                                 <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                             ) : <Save className="w-4 h-4" />}
                             Tallenna muutokset
+                        </button>
+                    </div>
+                </div>
+
+                {/* Password Change Section */}
+                <div className="bg-white rounded-[3rem] p-10 app-shadow border border-[#f1ebd8]">
+                    <div className="flex items-center gap-4 mb-10">
+                        <div className="w-12 h-12 bg-[#fff9f0] rounded-2xl flex items-center justify-center text-[#d35400]">
+                            <Lock className="w-6 h-6" />
+                        </div>
+                        <h2 className="text-2xl font-black text-[#3d1d11]">Vaihda Salasana</h2>
+                    </div>
+
+                    {passwordMessage && (
+                        <div className={`p-4 rounded-2xl border mb-6 flex items-center gap-3 ${
+                            passwordMessage.type === 'success'
+                                ? 'bg-[#27ae60]/5 border-[#27ae60]/20 text-[#27ae60]'
+                                : 'bg-[#e74c3c]/5 border-[#e74c3c]/20 text-[#e74c3c]'
+                        }`}>
+                            {passwordMessage.type === 'success' ? <Check className="w-4 h-4" /> : <Shield className="w-4 h-4" />}
+                            <p className="font-black uppercase text-xs tracking-widest">{passwordMessage.text}</p>
+                        </div>
+                    )}
+
+                    <div className="space-y-4">
+                        <div className="space-y-3">
+                            <label className="text-[11px] font-black uppercase tracking-[0.2em] text-[#3d1d11] ml-2">Uusi salasana</label>
+                            <input
+                                type="password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                placeholder="••••••••  (min. 8 merkkiä)"
+                                className="w-full bg-[#fdf2e2]/30 border-none rounded-2xl py-4 px-6 text-sm focus:ring-2 focus:ring-[#f3d179] transition-all font-medium"
+                            />
+                        </div>
+                        <div className="space-y-3">
+                            <label className="text-[11px] font-black uppercase tracking-[0.2em] text-[#3d1d11] ml-2">Vahvista uusi salasana</label>
+                            <input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="w-full bg-[#fdf2e2]/30 border-none rounded-2xl py-4 px-6 text-sm focus:ring-2 focus:ring-[#f3d179] transition-all font-medium"
+                            />
+                        </div>
+                        <button
+                            onClick={handlePasswordChange}
+                            disabled={passwordSaving}
+                            className="bg-[#3d1d11] text-white px-10 py-4 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-[#d35400] transition-all active:scale-95 shadow-xl flex items-center gap-3 disabled:opacity-50"
+                        >
+                            {passwordSaving ? (
+                                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            ) : <Lock className="w-4 h-4" />}
+                            Vaihda salasana
                         </button>
                     </div>
                 </div>

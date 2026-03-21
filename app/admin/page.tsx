@@ -57,7 +57,40 @@ export default function AdminDashboard() {
     const [timeRange, setTimeRange] = useState('7d')
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
     const [logoutLoading, setLogoutLoading] = useState(false)
+    const [currentPassword, setCurrentPassword] = useState('')
+    const [newPassword, setNewPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [passwordLoading, setPasswordLoading] = useState(false)
+    const [passwordError, setPasswordError] = useState('')
+    const [passwordSuccess, setPasswordSuccess] = useState('')
     const router = useRouter()
+
+    const handlePasswordChange = async () => {
+        setPasswordLoading(true)
+        setPasswordError('')
+        setPasswordSuccess('')
+        try {
+            const res = await fetch('/api/admin/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+            })
+            const data = await res.json()
+            if (!res.ok) {
+                setPasswordError(data.error || 'Jokin meni pieleen')
+            } else {
+                setPasswordSuccess('Salasana vaihdettu onnistuneesti!')
+                setCurrentPassword('')
+                setNewPassword('')
+                setConfirmPassword('')
+                setTimeout(() => { setIsPasswordModalOpen(false); setPasswordSuccess('') }, 1500)
+            }
+        } catch {
+            setPasswordError('Verkkovirhe. Yritä uudelleen.')
+        } finally {
+            setPasswordLoading(false)
+        }
+    }
 
     const handleLogout = async () => {
         setLogoutLoading(true)
@@ -68,34 +101,58 @@ export default function AdminDashboard() {
 
     return (
         <div className="min-h-screen bg-[#fffcf8] p-6 lg:p-10 relative">
-            {/* Password Change Modal - Simplified for Demo */}
+            {/* Password Change Modal */}
             {isPasswordModalOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
                     <div className="bg-white p-8 rounded-[2rem] max-w-md w-full shadow-2xl border border-[#f1ebd8]">
                         <h2 className="text-xl font-black text-[#3d1d11] mb-2">Vaihda Salasana</h2>
-                        <p className="text-sm text-[#a08a7e] mb-6">Tämä on demo-ympäristö. Oikeassa tuotantoversiossa tämä päivittäisi tietokannan.</p>
+                        <p className="text-sm text-[#a08a7e] mb-6">Syötä nykyinen salasanasi ja valitse uusi.</p>
 
                         <div className="space-y-4">
-                            <input type="password" placeholder="Nykyinen salasana" className="w-full px-4 py-3 rounded-xl bg-[#fffcf8] border border-[#f1ebd8]" />
-                            <input type="password" placeholder="Uusi salasana" className="w-full px-4 py-3 rounded-xl bg-[#fffcf8] border border-[#f1ebd8]" />
-                            <input type="password" placeholder="Vahvista uusi salasana" className="w-full px-4 py-3 rounded-xl bg-[#fffcf8] border border-[#f1ebd8]" />
+                            <input
+                                type="password"
+                                placeholder="Nykyinen salasana"
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                className="w-full px-4 py-3 rounded-xl bg-[#fffcf8] border border-[#f1ebd8] outline-none focus:border-[#3d1d11] transition-colors"
+                            />
+                            <input
+                                type="password"
+                                placeholder="Uusi salasana (min. 8 merkkiä)"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                className="w-full px-4 py-3 rounded-xl bg-[#fffcf8] border border-[#f1ebd8] outline-none focus:border-[#3d1d11] transition-colors"
+                            />
+                            <input
+                                type="password"
+                                placeholder="Vahvista uusi salasana"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="w-full px-4 py-3 rounded-xl bg-[#fffcf8] border border-[#f1ebd8] outline-none focus:border-[#3d1d11] transition-colors"
+                            />
                         </div>
+
+                        {passwordError && (
+                            <p className="mt-4 text-sm text-[#e74c3c] font-bold text-center">{passwordError}</p>
+                        )}
+                        {passwordSuccess && (
+                            <p className="mt-4 text-sm text-[#27ae60] font-bold text-center">{passwordSuccess}</p>
+                        )}
 
                         <div className="flex justify-end gap-3 mt-8">
                             <button
-                                onClick={() => setIsPasswordModalOpen(false)}
+                                onClick={() => { setIsPasswordModalOpen(false); setPasswordError(''); setPasswordSuccess('') }}
                                 className="px-6 py-3 rounded-xl font-bold text-[#a08a7e] hover:bg-[#fffcf8] transition-colors"
+                                disabled={passwordLoading}
                             >
                                 Peruuta
                             </button>
                             <button
-                                onClick={() => {
-                                    alert('Salasana vaihdettu (Demo)!')
-                                    setIsPasswordModalOpen(false)
-                                }}
-                                className="px-6 py-3 rounded-xl font-bold bg-[#3d1d11] text-white hover:bg-[#d35400] transition-colors shadow-lg"
+                                onClick={handlePasswordChange}
+                                disabled={passwordLoading}
+                                className="px-6 py-3 rounded-xl font-bold bg-[#3d1d11] text-white hover:bg-[#d35400] transition-colors shadow-lg disabled:opacity-50"
                             >
-                                Tallenna
+                                {passwordLoading ? 'Tallennetaan...' : 'Tallenna'}
                             </button>
                         </div>
                     </div>
