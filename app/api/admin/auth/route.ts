@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
+const ADMIN_EMAIL = 'cenk.yakinlar@hotmail.com'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'
+
 export async function POST(request: Request) {
     const body = await request.json()
-    const { password } = body
+    const { email, password } = body
 
-    // Hardcoded password for demo purposes
-    // In a real app, this should be an environment variable or DB check
-    if (password === 'admin123') {
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
         const cookieStore = await cookies()
         cookieStore.set('admin_session', 'true', {
             httpOnly: true,
@@ -19,5 +20,5 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true })
     }
 
-    return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
+    return NextResponse.json({ error: 'Virheellinen sähköposti tai salasana' }, { status: 401 })
 }

@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Lock } from 'lucide-react'
+import { Lock, Mail } from 'lucide-react'
 
 export default function AdminLogin() {
+    const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const router = useRouter()
@@ -12,13 +13,9 @@ export default function AdminLogin() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        // Simple verification (In production this should be a real auth check)
-        // We'll set a cookie via a server action or API route ideally, 
-        // but for this iteration let's use a server action we'll create next.
-
         const response = await fetch('/api/admin/auth', {
             method: 'POST',
-            body: JSON.stringify({ password }),
+            body: JSON.stringify({ email, password }),
             headers: { 'Content-Type': 'application/json' },
         })
 
@@ -26,7 +23,7 @@ export default function AdminLogin() {
             router.push('/admin')
             router.refresh()
         } else {
-            setError('Virheellinen salasana')
+            setError('Virheellinen sähköposti tai salasana')
         }
     }
 
@@ -40,13 +37,27 @@ export default function AdminLogin() {
                 <p className="text-[#a08a7e] mb-8">Tämä alue on tarkoitettu vain hallinnoijille.</p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
+                    <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d0c0b0]" />
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Sähköpostiosoite"
+                            required
+                            className="w-full pl-12 pr-5 py-4 bg-[#fffcf8] border border-[#f1ebd8] rounded-xl outline-none focus:border-[#3d1d11] font-bold text-[#3d1d11] placeholder:text-[#d0c0b0] transition-colors"
+                        />
+                    </div>
+
+                    <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#d0c0b0]" />
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Syötä hallintapalasana"
-                            className="w-full px-5 py-4 bg-[#fffcf8] border border-[#f1ebd8] rounded-xl outline-none focus:border-[#3d1d11] font-bold text-[#3d1d11] placeholder:text-[#d0c0b0] transition-colors"
+                            placeholder="Salasana"
+                            required
+                            className="w-full pl-12 pr-5 py-4 bg-[#fffcf8] border border-[#f1ebd8] rounded-xl outline-none focus:border-[#3d1d11] font-bold text-[#3d1d11] placeholder:text-[#d0c0b0] transition-colors"
                         />
                     </div>
 

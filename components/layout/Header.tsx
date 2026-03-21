@@ -55,22 +55,38 @@ export default function Header() {
             async (position) => {
                 const { latitude, longitude } = position.coords
                 try {
-                    // Using OSM Nominatim for demo reverse geocoding
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`)
-                    const data = await res.json()
-                    const city = data.address.city || data.address.town || data.address.village || 'Tuntematon'
-                    const suburb = data.address.suburb || data.address.neighbourhood || ''
-                    setLocation(`${city}${suburb ? ', ' + suburb : ''}`)
-                    setCity(city)
+                    // Use Server Action for reliable geocoding with User-Agent
+                    const { getLocationFromCoords } = await import('@/app/actions/location')
+                    const result = await getLocationFromCoords(latitude, longitude)
+
+                    if (result.success) {
+                        setLocation(result.location || 'Helsinki')
+                        setCity(result.city || 'Helsinki')
+                    } else {
+                        // Fallback mechanism or alert
+                        console.warn('Geocoding failed:', result.error)
+                        setLocation('Sijaintia ei löytynyt')
+                    }
                 } catch (error) {
-                    console.error('Location error:', error)
+                    console.error('Location detection error:', error)
+                    setLocation('Virhe sijainnissa')
                 } finally {
                     setIsDetecting(false)
                 }
             },
             (error) => {
                 console.error('Geolocation error:', error)
+                let errorMsg = 'Virhe sijainnin haussa.'
+                if (error.code === error.PERMISSION_DENIED) {
+                    errorMsg = 'Sijaintitiedot evätty. Salli sijainti selaimen asetuksista.'
+                }
+                alert(errorMsg)
                 setIsDetecting(false)
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
             }
         )
     }
