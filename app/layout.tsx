@@ -7,6 +7,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import { LanguageProvider } from "@/lib/i18n/context";
 
 import { LocationProvider } from "@/lib/context/LocationContext";
+import AuthHashHandler from "@/components/auth/AuthHashHandler";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -88,6 +89,7 @@ export default function RootLayout({
         />
         <LanguageProvider>
           <LocationProvider>
+            <AuthHashHandler />
             <Header />
             <main className="pb-24 md:pb-0">
               {children}
