@@ -12,6 +12,10 @@ export default function LoginPage() {
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [forgotMode, setForgotMode] = useState(false)
+    const [forgotEmail, setForgotEmail] = useState('')
+    const [forgotLoading, setForgotLoading] = useState(false)
+    const [forgotMessage, setForgotMessage] = useState<string | null>(null)
 
     const handleEmailLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -33,6 +37,24 @@ export default function LoginPage() {
             setError(err.message || 'An error occurred during login')
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleForgotPassword = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setForgotLoading(true)
+        setForgotMessage(null)
+        try {
+            const supabase = createClient()
+            const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+                redirectTo: 'https://foodai.fi/reset-password',
+            })
+            if (error) throw error
+            setForgotMessage('Salasanan palautuslinkki lähetetty sähköpostiisi!')
+        } catch (err: any) {
+            setForgotMessage('Virhe: ' + (err.message || 'Yritä uudelleen'))
+        } finally {
+            setForgotLoading(false)
         }
     }
 
@@ -79,6 +101,64 @@ export default function LoginPage() {
                         <p className="text-[#a08a7e] font-medium">Kirjaudu sisään säästääksesi vielä enemmän</p>
                     </div>
 
+                {forgotMode ? (
+                        /* Forgot Password Form */
+                        <form className="space-y-6" onSubmit={handleForgotPassword}>
+                            <div className="text-center mb-8">
+                                <h1 className="text-3xl font-black text-[#3d1d11] mb-3 tracking-tight">Unohditko salasanan?</h1>
+                                <p className="text-[#a08a7e] font-medium">Syötä sähköpostisi niin lähetämme palautuslinkin.</p>
+                            </div>
+
+                            {forgotMessage && (
+                                <div className={`p-4 rounded-2xl border text-center ${
+                                    forgotMessage.startsWith('Virhe')
+                                        ? 'bg-[#e74c3c]/5 border-[#e74c3c]/20'
+                                        : 'bg-[#27ae60]/5 border-[#27ae60]/20'
+                                }`}>
+                                    <p className={`text-sm font-bold ${
+                                        forgotMessage.startsWith('Virhe') ? 'text-[#e74c3c]' : 'text-[#27ae60]'
+                                    }`}>{forgotMessage}</p>
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-[#3d1d11] ml-2">Sähköposti</label>
+                                <div className="relative group">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a08a7e] group-focus-within:text-[#d35400] transition-colors">
+                                        <Mail className="w-5 h-5" />
+                                    </div>
+                                    <input
+                                        type="email"
+                                        placeholder="nimi@esimerkki.com"
+                                        className="w-full bg-[#fdf2e2]/50 border-none rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-[#f3d179] transition-all font-medium placeholder:text-[#a08a7e]/50"
+                                        value={forgotEmail}
+                                        onChange={(e) => setForgotEmail(e.target.value)}
+                                        disabled={forgotLoading}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="w-full bg-[#3d1d11] text-white py-5 rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:bg-[#d35400] transition-all active:scale-95 shadow-xl flex items-center justify-center gap-3"
+                                disabled={forgotLoading}
+                            >
+                                {forgotLoading ? (
+                                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                ) : 'Lähetä palautuslinkki'}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => { setForgotMode(false); setForgotMessage(null) }}
+                                className="w-full text-[#a08a7e] text-xs font-bold uppercase tracking-wider hover:text-[#3d1d11] transition-colors"
+                            >
+                                ← Takaisin kirjautumiseen
+                            </button>
+                        </form>
+                    ) : (
+                    /* Login Form */
                     <form className="space-y-6" onSubmit={handleEmailLogin}>
                         {error && (
                             <div className="p-4 rounded-2xl bg-[#e74c3c]/5 border border-[#e74c3c]/20">
@@ -111,9 +191,13 @@ export default function LoginPage() {
                                 <label className="text-[11px] font-black uppercase tracking-[0.2em] text-[#3d1d11]">
                                     Salasana
                                 </label>
-                                <Link href="#" className="text-[10px] text-[#3d1d11]/60 hover:text-[#d35400] font-black uppercase tracking-wider">
+                                <button
+                                    type="button"
+                                    onClick={() => { setForgotMode(true); setForgotEmail(email) }}
+                                    className="text-[10px] text-[#3d1d11]/60 hover:text-[#d35400] font-black uppercase tracking-wider transition-colors"
+                                >
                                     Unohditko?
-                                </Link>
+                                </button>
                             </div>
                             <div className="relative group">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a08a7e] group-focus-within:text-[#d35400] transition-colors">
@@ -146,6 +230,7 @@ export default function LoginPage() {
                             )}
                         </button>
                     </form>
+                    )}
 
                     <div className="relative my-10">
                         <div className="absolute inset-0 flex items-center">
