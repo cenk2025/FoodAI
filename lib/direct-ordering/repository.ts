@@ -93,8 +93,13 @@ export async function upsertRestaurant(
 ): Promise<UpsertRestaurantResult> {
     if (!(isSupabaseConfigured() && hasServiceRole())) {
         // In-memory fallback (best-effort — no slug uniqueness check beyond
-        // what the store enforces).
-        const r = mem.mem_upsertRestaurant({ ...input, id: input.id });
+        // what the store enforces). The action layer carries the city as
+        // `cityName`; the store keeps it as the resolved `city` string.
+        const { cityName, ...rest } = input;
+        const r = mem.mem_upsertRestaurant({
+            ...rest,
+            city: cityName ?? 'Jyväskylä',
+        });
         return { ok: true, restaurant: r };
     }
 
@@ -104,7 +109,7 @@ export async function upsertRestaurant(
         // Resolve city_id from cityName (insert the city if it doesn't exist
         // yet — matches the seed migration's pattern).
         let cityId: string | null = null;
-        const cityName = input.cityName?.trim() || input.city?.trim() || null;
+        const cityName = input.cityName?.trim() || null;
         if (cityName) {
             const existing = await sb
                 .from('cities')
