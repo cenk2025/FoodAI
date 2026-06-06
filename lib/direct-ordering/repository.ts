@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import * as mem from './memory-store';
 import type {
     DirectRestaurant,
@@ -16,6 +17,14 @@ function isSupabaseConfigured(): boolean {
     return Boolean(
         process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
+}
+
+// Service-role client is used for the admin-gated write paths (menu CRUD,
+// order create/update). RLS would otherwise block these because our admin
+// auth is cookie-based, not a Supabase JWT. The cookie middleware at
+// /admin/* enforces the trust boundary — Supabase's RLS isn't the gate.
+function hasServiceRole(): boolean {
+    return Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
 // --- restaurants -----------------------------------------------------------
@@ -103,13 +112,56 @@ export async function getMenuItem(id: string): Promise<MenuItem | null> {
 }
 
 export async function upsertMenuItem(input: Omit<MenuItem, 'id'> & { id?: string }): Promise<MenuItem> {
-    // For the demo we keep the source of truth in memory regardless of DB —
-    // writing through Supabase needs an admin-role JWT that we don't yet
-    // mint server-side. When that's added, this function can dual-write.
+    if (isSupabaseConfigured() && hasServiceRole()) {
+        try {
+            const sb = createServiceClient();
+            // Only set sizes/customization_groups if the caller actually
+            // provided them — otherwise we'd nuke existing seeded values on
+            // a partial update from the admin form.
+            const row: Record<string, unknown> = {
+                restaurant_id: input.restaurantId,
+                name: input.name,
+                description: input.description || null,
+                price_cents: input.priceCents,
+                currency: input.currency || 'EUR',
+                image_url: input.imageUrl || null,
+                category: input.category || null,
+                is_available: input.isAvailable,
+                sort_order: input.sortOrder,
+                updated_at: new Date().toISOString(),
+            };
+            if (input.sizes !== undefined) row.sizes = input.sizes;
+            if (input.customizationGroups !== undefined) row.customization_groups = input.customizationGroups;
+
+            const query = input.id
+                ? sb.from('menu_items').update(row).eq('id', input.id).select().single()
+                : sb.from('menu_items').insert(row).select().single();
+            const { data, error } = await query;
+            if (!error && data) return rowToMenuItem(data as MenuItemRow);
+            console.warn('[direct-ordering] menu_items upsert failed, using in-memory', error);
+        } catch (e) {
+            console.warn('[direct-ordering] menu_items upsert threw, using in-memory', e);
+        }
+    }
     return mem.mem_upsertMenuItem(input);
 }
 
 export async function deleteMenuItem(id: string): Promise<boolean> {
+    if (isSupabaseConfigured() && hasServiceRole()) {
+        try {
+            const sb = createServiceClient();
+            const { error } = await sb.from('menu_items').delete().eq('id', id);
+            if (!error) {
+                // Keep in-memory in sync in case the DB-backed read hits the
+                // fallback branch on a later call (network blip, etc.).
+                mem.mem_deleteMenuItem(id);
+                return true;
+            }
+            console.warn('[direct-ordering] menu_items delete failed, using in-memory', error);
+        } catch (e) {
+            console.warn('[direct-ordering] menu_items delete threw, using in-memory', e);
+        }
+    }
     return mem.mem_deleteMenuItem(id);
 }
 
@@ -140,17 +192,100 @@ export async function createOrder(
         paymentStatus?: Order['paymentStatus'];
     }
 ): Promise<Order> {
-    // Same reasoning as upsertMenuItem — admin-role inserts require service
-    // credentials that aren't wired up. The in-memory ledger is authoritative
-    // for the demo; admin dashboard reads through this same path.
+    if (isSupabaseConfigured() && hasServiceRole()) {
+        try {
+            const sb = createServiceClient();
+            const orderRow = {
+                restaurant_id: input.restaurantId,
+                customer_name: input.customerName,
+                customer_phone: input.customerPhone ?? null,
+                customer_email: input.customerEmail ?? null,
+                delivery_address: input.deliveryAddress,
+                delivery_postal_code: input.deliveryPostalCode ?? null,
+                delivery_lat: input.deliveryLat ?? null,
+                delivery_lon: input.deliveryLon ?? null,
+                notes: input.notes ?? null,
+                subtotal_cents: input.subtotalCents,
+                delivery_fee_cents: input.deliveryFeeCents,
+                total_cents: input.totalCents,
+                currency: input.currency,
+                status: input.status ?? 'pending',
+                payment_status: input.paymentStatus ?? 'unpaid',
+            };
+            const { data: orderData, error: orderErr } = await sb
+                .from('direct_orders')
+                .insert(orderRow)
+                .select()
+                .single();
+            if (orderErr || !orderData) {
+                console.warn('[direct-ordering] direct_orders insert failed, using in-memory', orderErr);
+                return mem.mem_createOrder(input);
+            }
+
+            const itemRows = input.items.map((it) => ({
+                order_id: orderData.id,
+                menu_item_id: it.menuItemId,
+                name_snapshot: it.nameSnapshot,
+                size_snapshot: it.sizeId
+                    ? { id: it.sizeId, label: it.sizeLabel ?? null }
+                    : null,
+                options_snapshot: it.options,
+                unit_price_cents_snapshot: it.unitPriceCentsSnapshot,
+                quantity: it.quantity,
+            }));
+            const { error: itemsErr } = await sb.from('direct_order_items').insert(itemRows);
+            if (itemsErr) {
+                console.warn('[direct-ordering] order_items insert failed', itemsErr);
+            }
+            return rowToOrder(orderData, input.items);
+        } catch (e) {
+            console.warn('[direct-ordering] createOrder threw, using in-memory', e);
+        }
+    }
     return mem.mem_createOrder(input);
 }
 
 export async function listOrders(restaurantId: string): Promise<Order[]> {
+    if (isSupabaseConfigured() && hasServiceRole()) {
+        try {
+            const sb = createServiceClient();
+            const { data, error } = await sb
+                .from('direct_orders')
+                .select('*, direct_order_items(*)')
+                .eq('restaurant_id', restaurantId)
+                .order('created_at', { ascending: false });
+            if (!error && data) {
+                return data.map((row) =>
+                    rowToOrder(row, (row.direct_order_items ?? []).map(orderItemRowToItem)),
+                );
+            }
+            console.warn('[direct-ordering] listOrders failed, using in-memory', error);
+        } catch (e) {
+            console.warn('[direct-ordering] listOrders threw, using in-memory', e);
+        }
+    }
     return mem.mem_listOrders(restaurantId);
 }
 
 export async function getOrder(id: string): Promise<Order | null> {
+    if (isSupabaseConfigured() && hasServiceRole()) {
+        try {
+            const sb = createServiceClient();
+            const { data, error } = await sb
+                .from('direct_orders')
+                .select('*, direct_order_items(*)')
+                .eq('id', id)
+                .maybeSingle();
+            if (!error && data) {
+                return rowToOrder(data, (data.direct_order_items ?? []).map(orderItemRowToItem));
+            }
+            if (error) {
+                console.warn('[direct-ordering] getOrder failed, using in-memory', error);
+            }
+        } catch (e) {
+            console.warn('[direct-ordering] getOrder threw, using in-memory', e);
+        }
+    }
     return mem.mem_getOrder(id);
 }
 
@@ -158,10 +293,93 @@ export async function updateOrder(
     id: string,
     patch: Parameters<typeof mem.mem_updateOrder>[1]
 ): Promise<Order | null> {
+    if (isSupabaseConfigured() && hasServiceRole()) {
+        try {
+            const sb = createServiceClient();
+            const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
+            if (patch.status !== undefined) row.status = patch.status;
+            if (patch.paymentStatus !== undefined) row.payment_status = patch.paymentStatus;
+            if (patch.paymentReference !== undefined) row.payment_reference = patch.paymentReference;
+            if (patch.deliveryReference !== undefined) row.delivery_reference = patch.deliveryReference;
+            if (patch.paymentProvider !== undefined) row.payment_provider = patch.paymentProvider;
+            if (patch.deliveryProvider !== undefined) row.delivery_provider = patch.deliveryProvider;
+            const { data, error } = await sb
+                .from('direct_orders')
+                .update(row)
+                .eq('id', id)
+                .select('*, direct_order_items(*)')
+                .single();
+            if (!error && data) {
+                return rowToOrder(data, (data.direct_order_items ?? []).map(orderItemRowToItem));
+            }
+            console.warn('[direct-ordering] updateOrder failed, using in-memory', error);
+        } catch (e) {
+            console.warn('[direct-ordering] updateOrder threw, using in-memory', e);
+        }
+    }
     return mem.mem_updateOrder(id, patch);
 }
 
 // --- row mappers -----------------------------------------------------------
+
+type OrderRow = {
+    id: string; restaurant_id: string; customer_name: string; customer_phone: string | null;
+    customer_email: string | null; delivery_address: string; delivery_postal_code: string | null;
+    delivery_lat: number | null; delivery_lon: number | null; notes: string | null;
+    subtotal_cents: number; delivery_fee_cents: number; total_cents: number; currency: string;
+    status: Order['status']; payment_status: Order['paymentStatus'];
+    payment_provider: string | null; payment_reference: string | null;
+    delivery_provider: string | null; delivery_reference: string | null;
+    created_at: string;
+};
+
+type OrderItemRow = {
+    menu_item_id: string | null;
+    name_snapshot: string;
+    size_snapshot: { id?: string; label?: string | null } | null;
+    options_snapshot: OrderItem['options'] | null;
+    unit_price_cents_snapshot: number;
+    quantity: number;
+};
+
+function orderItemRowToItem(r: OrderItemRow): OrderItem {
+    return {
+        menuItemId: r.menu_item_id ?? '',
+        nameSnapshot: r.name_snapshot,
+        sizeId: r.size_snapshot?.id,
+        sizeLabel: r.size_snapshot?.label ?? undefined,
+        options: r.options_snapshot ?? [],
+        unitPriceCentsSnapshot: r.unit_price_cents_snapshot,
+        quantity: r.quantity,
+    };
+}
+
+function rowToOrder(r: OrderRow, items: OrderItem[]): Order {
+    return {
+        id: r.id,
+        restaurantId: r.restaurant_id,
+        customerName: r.customer_name,
+        customerPhone: r.customer_phone ?? undefined,
+        customerEmail: r.customer_email ?? undefined,
+        deliveryAddress: r.delivery_address,
+        deliveryPostalCode: r.delivery_postal_code ?? undefined,
+        deliveryLat: r.delivery_lat ?? undefined,
+        deliveryLon: r.delivery_lon ?? undefined,
+        notes: r.notes ?? undefined,
+        items,
+        subtotalCents: r.subtotal_cents,
+        deliveryFeeCents: r.delivery_fee_cents,
+        totalCents: r.total_cents,
+        currency: r.currency,
+        status: r.status,
+        paymentStatus: r.payment_status,
+        paymentProvider: r.payment_provider ?? undefined,
+        paymentReference: r.payment_reference ?? undefined,
+        deliveryProvider: r.delivery_provider ?? undefined,
+        deliveryReference: r.delivery_reference ?? undefined,
+        createdAt: r.created_at,
+    };
+}
 
 type RestaurantRow = {
     id: string; slug: string; name: string; description: string | null;
