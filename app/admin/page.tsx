@@ -16,6 +16,7 @@ import {
     Cell
 } from 'recharts'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
     DollarSign,
     TrendingUp,
@@ -25,7 +26,9 @@ import {
     ArrowDownRight,
     Filter,
     Lock,
-    LogOut
+    LogOut,
+    Store,
+    ArrowRight
 } from 'lucide-react'
 
 // Mock Data
@@ -41,16 +44,15 @@ const DAILY_STATS = [
 
 const PLATFORM_DATA = [
     { name: 'Wolt', value: 45, color: '#00c2e8' },
-    { name: 'Foodora', value: 35, color: '#d6006e' },
-    { name: 'UberEats', value: 20, color: '#06c167' },
+    { name: 'UberEats', value: 55, color: '#06c167' },
 ]
 
 const RECENT_CLICKS = [
     { id: '1', offer: 'Gourmet Pizza', platform: 'Wolt', time: '2 min sitten', value: '0.50€' },
-    { id: '2', offer: 'Sushi Platter', platform: 'Foodora', time: '5 min sitten', value: '0.45€' },
+    { id: '2', offer: 'Sushi Platter', platform: 'UberEats', time: '5 min sitten', value: '0.45€' },
     { id: '3', offer: 'Double Burger', platform: 'Wolt', time: '12 min sitten', value: '0.50€' },
     { id: '4', offer: 'Vegan Bowl', platform: 'UberEats', time: '15 min sitten', value: '0.40€' },
-    { id: '5', offer: 'Kebab Special', platform: 'Foodora', time: '22 min sitten', value: '0.45€' },
+    { id: '5', offer: 'Kebab Special', platform: 'UberEats', time: '22 min sitten', value: '0.45€' },
 ]
 
 export default function AdminDashboard() {
@@ -206,6 +208,25 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
+                {/* Direct-ordering module entry */}
+                <Link
+                    href="/admin/restaurants"
+                    className="group flex items-center gap-5 bg-white border border-[#f1ebd8] rounded-[2rem] p-6 app-shadow hover:border-[#d35400]/30 hover:-translate-y-0.5 transition-all"
+                >
+                    <div className="w-12 h-12 rounded-2xl bg-[#fdf2e2] text-[#d35400] flex items-center justify-center">
+                        <Store className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-black text-[#3d1d11] tracking-tight">
+                            Ravintolat (suora tilaus)
+                        </h2>
+                        <p className="text-sm font-medium text-[#a08a7e]">
+                            Hallitse FoodAin kautta suoraan myyvien ravintoloiden menuja ja tilauksia.
+                        </p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-[#3d1d11] group-hover:text-[#d35400] transition-colors" />
+                </Link>
+
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <StatCard
@@ -331,8 +352,7 @@ export default function AdminDashboard() {
                                         <td className="px-8 py-4">
                                             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wide inline-block
                                                 ${item.platform === 'Wolt' ? 'bg-[#e0f7fa] text-[#00acc1]' :
-                                                    item.platform === 'Foodora' ? 'bg-[#fce4ec] text-[#ec407a]' :
-                                                        'bg-[#e8f5e9] text-[#43a047]'}`}>
+                                                    'bg-[#e8f5e9] text-[#43a047]'}`}>
                                                 {item.platform}
                                             </span>
                                         </td>

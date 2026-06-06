@@ -12,6 +12,7 @@ import { TrendingDown, Clock, Star, ChevronRight, MapPin } from 'lucide-react'
 import Footer from '@/components/layout/Footer'
 import OfferPreview from '@/components/offers/OfferPreview'
 import { useLocation } from '@/lib/context/LocationContext'
+import HomepagePizzaPizzaCard from '@/components/direct-ordering/HomepagePizzaPizzaCard'
 
 export default function HomePage() {
   const { city } = useLocation()
@@ -46,7 +47,7 @@ export default function HomePage() {
       {
         id: '2',
         meal: { name: 'Sushi Selection Platter', restaurant: { name: 'Sakura Sushi', rating: 4.6, city: { name: 'Espoo' } }, diet_flags: ['gluten_free'], image_path: 'sushi' },
-        source: { name: 'Foodora' },
+        source: { name: 'UberEats' },
         price_cents: 1850,
         old_price_cents: 2200,
         delivery_fee_cents: 390,
@@ -73,7 +74,7 @@ export default function HomePage() {
       {
         id: '5',
         meal: { name: 'BBQ Chicken Pizza', restaurant: { name: 'Pizza Hut', rating: 4.2, city: { name: 'Vantaa' } }, diet_flags: [], image_path: 'pizza' },
-        source: { name: 'Foodora' },
+        source: { name: 'UberEats' },
         price_cents: 1390,
         old_price_cents: 1890,
         delivery_fee_cents: 290,
@@ -91,7 +92,7 @@ export default function HomePage() {
       {
         id: '7',
         meal: { name: 'Kebab with Rice', restaurant: { name: 'Jyväskylä Kebab', rating: 4.3, city: { name: 'Jyväskylä' } }, diet_flags: [], image_path: 'pizza' },
-        source: { name: 'Foodora' },
+        source: { name: 'UberEats' },
         price_cents: 1150,
         old_price_cents: 1350,
         delivery_fee_cents: 290,
@@ -118,7 +119,7 @@ export default function HomePage() {
       {
         id: '10',
         meal: { name: 'Aurajoki Burger', restaurant: { name: 'Turku Burger', rating: 4.4, city: { name: 'Turku' } }, diet_flags: [], image_path: 'burger' },
-        source: { name: 'Foodora' },
+        source: { name: 'UberEats' },
         price_cents: 1290,
         old_price_cents: 1590,
         delivery_fee_cents: 390,
@@ -145,7 +146,7 @@ export default function HomePage() {
       {
         id: '13',
         meal: { name: 'Chicken Wings (10pcs)', restaurant: { name: 'Siipiweikot', rating: 4.7, city: { name: 'Tampere' } }, diet_flags: [], image_path: 'burger' },
-        source: { name: 'Foodora' },
+        source: { name: 'UberEats' },
         price_cents: 1250,
         old_price_cents: 1450,
         delivery_fee_cents: 350,
@@ -405,6 +406,9 @@ export default function HomePage() {
                 </div>
               </section>
             )}
+
+            {/* Direct-order partner spotlight (additive — separate from the aggregator feed) */}
+            <HomepagePizzaPizzaCard />
 
             {/* Daily Best Deals - Responsive Grid */}
             <section>

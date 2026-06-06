@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import AiAssistant from "@/components/ai/AiAssistant";
 import "./globals.css";
 import Header from "@/components/layout/Header";
@@ -8,17 +8,19 @@ import { LanguageProvider } from "@/lib/i18n/context";
 
 import { LocationProvider } from "@/lib/context/LocationContext";
 import AuthHashHandler from "@/components/auth/AuthHashHandler";
+import { CartProvider } from "@/lib/direct-ordering/CartContext";
+import CartPanel from "@/components/direct-ordering/CartPanel";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", weight: ["400", "500", "600", "700", "800"] });
 
 export const metadata: Metadata = {
   title: {
     default: "FoodAi - Suomen Parhaat Ruokatarjoukset",
     template: "%s | FoodAi"
   },
-  description: "Vertaile ruokien hintoja Wolt, Foodora ja UberEats alustoilla. Löydä halvin pizza, burgeri tai sushi Helsingissä, Espoossa ja Vantaalla. Säästä jopa 50% jokaisesta tilauksesta.",
-  keywords: ["ruokatarjoukset", "hintavertailu", "Wolt alennuskoodi", "Foodora tarjous", "Helsinki ravintolat", "ilmainen kuljetus", "halpa ruoka"],
+  description: "Vertaile ruokien hintoja Wolt ja Uber Eats alustoilla. Löydä halvin pizza, burgeri tai sushi Helsingissä, Espoossa ja Vantaalla. Säästä jopa 50% jokaisesta tilauksesta.",
+  keywords: ["ruokatarjoukset", "hintavertailu", "Wolt alennuskoodi", "Uber Eats tarjous", "Helsinki ravintolat", "ilmainen kuljetus", "halpa ruoka"],
   authors: [{ name: "FoodAi Team" }],
   metadataBase: new URL('https://foodai.fi'),
   alternates: {
@@ -82,20 +84,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${outfit.variable} font-outfit antialiased bg-[#fffcf8]`} suppressHydrationWarning>
+      <body className={`${inter.variable} ${jakarta.variable} font-sans antialiased bg-[#fffcf8]`} suppressHydrationWarning>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <LanguageProvider>
           <LocationProvider>
-            <AuthHashHandler />
-            <Header />
-            <main className="pb-24 md:pb-0">
-              {children}
-            </main>
-            <BottomNav />
-            <AiAssistant />
+            <CartProvider>
+              <AuthHashHandler />
+              <Header />
+              <main className="pb-24 md:pb-0">
+                {children}
+              </main>
+              <BottomNav />
+              <AiAssistant />
+              <CartPanel />
+            </CartProvider>
           </LocationProvider>
         </LanguageProvider>
       </body>
