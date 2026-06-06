@@ -109,6 +109,11 @@ export function mem_getDeliveryZone(restaurantId: string): DeliveryZone | null {
     return getStore().zones.get(restaurantId) ?? null;
 }
 
+export function mem_upsertDeliveryZone(zone: DeliveryZone): DeliveryZone {
+    getStore().zones.set(zone.restaurantId, { ...zone });
+    return zone;
+}
+
 // --- orders ----------------------------------------------------------------
 
 export function mem_createOrder(

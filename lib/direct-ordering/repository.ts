@@ -285,6 +285,40 @@ export async function getDeliveryZone(restaurantId: string): Promise<DeliveryZon
     }
 }
 
+export async function upsertDeliveryZone(zone: DeliveryZone): Promise<DeliveryZone | null> {
+    if (isSupabaseConfigured() && hasServiceRole()) {
+        try {
+            const sb = createServiceClient();
+            const row = {
+                restaurant_id: zone.restaurantId,
+                center_lat: zone.centerLat,
+                center_lon: zone.centerLon,
+                radius_m: zone.radiusM,
+                fee_cents: zone.feeCents,
+                min_order_cents: zone.minOrderCents,
+                allowed_postal_codes: zone.allowedPostalCodes,
+            };
+            // delivery_zones has no unique constraint on restaurant_id at the
+            // schema level; we treat one-zone-per-restaurant as an invariant
+            // and do a manual upsert.
+            const existing = await sb
+                .from('delivery_zones')
+                .select('id')
+                .eq('restaurant_id', zone.restaurantId)
+                .maybeSingle();
+            const query = existing.data?.id
+                ? sb.from('delivery_zones').update(row).eq('id', existing.data.id).select().single()
+                : sb.from('delivery_zones').insert(row).select().single();
+            const { data, error } = await query;
+            if (!error && data) return rowToZone(data as ZoneRow);
+            console.warn('[direct-ordering] delivery_zones upsert failed, using in-memory', error);
+        } catch (e) {
+            console.warn('[direct-ordering] delivery_zones upsert threw, using in-memory', e);
+        }
+    }
+    return mem.mem_upsertDeliveryZone(zone);
+}
+
 // --- orders ----------------------------------------------------------------
 
 export async function createOrder(

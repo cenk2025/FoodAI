@@ -2,12 +2,21 @@
 
 import { useState, useTransition } from 'react';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
-import type { MenuItem, MenuItemSize, Order } from '@/lib/direct-ordering/types';
+import type {
+    CustomizationGroup,
+    CustomizationOption,
+    DeliveryZone,
+    DirectRestaurant,
+    MenuItem,
+    MenuItemSize,
+    Order,
+} from '@/lib/direct-ordering/types';
 import { formatEUR } from '@/lib/direct-ordering/CartContext';
 import {
     adminUpsertMenuItem,
     adminDeleteMenuItem,
 } from '../actions';
+import DeliveryZoneEditor from './DeliveryZoneEditor';
 
 // Local row shape used inside the form — price is stored as a string so the
 // numeric input stays controlled even while the user is typing partial values.
@@ -29,15 +38,103 @@ function sizesToDrafts(sizes: MenuItemSize[] | undefined): SizeDraft[] {
     }));
 }
 
-type Props = {
-    restaurantId: string;
-    menuItems: MenuItem[];
-    orders: Order[];
+// Customization editor draft state. The shape mirrors CustomizationGroup but
+// keeps numeric fields as strings while the form is being typed.
+type OptionDraft = {
+    id: string;
+    label: string;
+    priceEuros: string;
 };
 
-type Tab = 'menu' | 'orders';
+type GroupDraft = {
+    id: string;
+    label: string;
+    type: 'single' | 'multi';
+    minSelect: string;
+    maxSelect: string;       // '' = uncapped
+    freeQuantity: string;    // '' = none free
+    helperText: string;
+    options: OptionDraft[];
+};
 
-export default function AdminRestaurantClient({ restaurantId, menuItems, orders }: Props) {
+function makeGroupDraftId(): string {
+    return `grp-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function makeOptionDraftId(): string {
+    return `opt-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function groupsToDrafts(groups: CustomizationGroup[] | undefined): GroupDraft[] {
+    return (groups ?? []).map((g) => ({
+        id: g.id,
+        label: g.label,
+        type: g.type,
+        minSelect: String(g.minSelect),
+        maxSelect: g.maxSelect != null ? String(g.maxSelect) : '',
+        freeQuantity: g.freeQuantity != null ? String(g.freeQuantity) : '',
+        helperText: g.helperText ?? '',
+        options: g.options.map((o) => ({
+            id: o.id,
+            label: o.label,
+            priceEuros: (o.priceCents / 100).toFixed(2),
+        })),
+    }));
+}
+
+// Serialize the draft state back to the wire shape the action expects.
+function draftsToGroupsJson(drafts: GroupDraft[]): CustomizationGroup[] {
+    const out: CustomizationGroup[] = [];
+    for (const d of drafts) {
+        const label = d.label.trim();
+        if (!label) continue;
+        const options: CustomizationOption[] = [];
+        for (const o of d.options) {
+            const oLabel = o.label.trim();
+            if (!oLabel) continue;
+            const priceCents = Math.round(Number(o.priceEuros) * 100);
+            if (!Number.isFinite(priceCents) || priceCents < 0) continue;
+            options.push({ id: o.id, label: oLabel, priceCents });
+        }
+        if (options.length === 0) continue;
+        const min = Math.max(0, Math.floor(Number(d.minSelect) || 0));
+        const maxRaw = Number(d.maxSelect);
+        const max =
+            d.type === 'multi' && Number.isFinite(maxRaw) && maxRaw > 0
+                ? Math.floor(maxRaw)
+                : d.type === 'single'
+                  ? 1
+                  : undefined;
+        const freeRaw = Number(d.freeQuantity);
+        const free =
+            d.type === 'multi' && Number.isFinite(freeRaw) && freeRaw > 0
+                ? Math.floor(freeRaw)
+                : undefined;
+        out.push({
+            id: d.id,
+            label,
+            type: d.type,
+            minSelect: min,
+            maxSelect: max,
+            freeQuantity: free,
+            helperText: d.helperText.trim() || undefined,
+            options,
+        });
+    }
+    return out;
+}
+
+type Props = {
+    restaurant: DirectRestaurant;
+    menuItems: MenuItem[];
+    orders: Order[];
+    zone: DeliveryZone | null;
+};
+
+type Tab = 'menu' | 'orders' | 'settings';
+
+export default function AdminRestaurantClient({ restaurant, menuItems, orders, zone }: Props) {
+    const restaurantId = restaurant.id;
     const [tab, setTab] = useState<Tab>('menu');
     const [editing, setEditing] = useState<MenuItem | 'new' | null>(null);
     const [isPending, startTransition] = useTransition();
@@ -51,6 +148,9 @@ export default function AdminRestaurantClient({ restaurantId, menuItems, orders 
                 </TabButton>
                 <TabButton active={tab === 'orders'} onClick={() => setTab('orders')}>
                     Orders ({orders.length})
+                </TabButton>
+                <TabButton active={tab === 'settings'} onClick={() => setTab('settings')}>
+                    Settings
                 </TabButton>
             </div>
 
@@ -202,6 +302,12 @@ export default function AdminRestaurantClient({ restaurantId, menuItems, orders 
                 </section>
             )}
 
+            {tab === 'settings' && (
+                <section className="space-y-6">
+                    <DeliveryZoneEditor restaurantId={restaurantId} zone={zone} />
+                </section>
+            )}
+
             {editing && (
                 <ItemFormModal
                     restaurantId={restaurantId}
@@ -250,6 +356,7 @@ function ItemFormModal({
     onSubmitting: (p: () => void) => void;
 }) {
     const [sizes, setSizes] = useState<SizeDraft[]>(() => sizesToDrafts(item?.sizes));
+    const [groups, setGroups] = useState<GroupDraft[]>(() => groupsToDrafts(item?.customizationGroups));
 
     const addSize = () =>
         setSizes((prev) => [
@@ -264,6 +371,65 @@ function ItemFormModal({
 
     const removeSize = (idx: number) =>
         setSizes((prev) => prev.filter((_, i) => i !== idx));
+
+    const addGroup = () =>
+        setGroups((prev) => [
+            ...prev,
+            {
+                id: makeGroupDraftId(),
+                label: '',
+                type: 'single',
+                minSelect: '1',
+                maxSelect: '',
+                freeQuantity: '',
+                helperText: '',
+                options: [{ id: makeOptionDraftId(), label: '', priceEuros: '0.00' }],
+            },
+        ]);
+
+    const updateGroup = (idx: number, patch: Partial<GroupDraft>) =>
+        setGroups((prev) => prev.map((g, i) => (i === idx ? { ...g, ...patch } : g)));
+
+    const removeGroup = (idx: number) =>
+        setGroups((prev) => prev.filter((_, i) => i !== idx));
+
+    const addOption = (gIdx: number) =>
+        setGroups((prev) =>
+            prev.map((g, i) =>
+                i === gIdx
+                    ? {
+                          ...g,
+                          options: [
+                              ...g.options,
+                              { id: makeOptionDraftId(), label: '', priceEuros: '0.00' },
+                          ],
+                      }
+                    : g,
+            ),
+        );
+
+    const updateOption = (gIdx: number, oIdx: number, patch: Partial<OptionDraft>) =>
+        setGroups((prev) =>
+            prev.map((g, i) =>
+                i === gIdx
+                    ? {
+                          ...g,
+                          options: g.options.map((o, j) =>
+                              j === oIdx ? { ...o, ...patch } : o,
+                          ),
+                      }
+                    : g,
+            ),
+        );
+
+    const removeOption = (gIdx: number, oIdx: number) =>
+        setGroups((prev) =>
+            prev.map((g, i) =>
+                i === gIdx
+                    ? { ...g, options: g.options.filter((_, j) => j !== oIdx) }
+                    : g,
+            ),
+        );
 
     return (
         <div
@@ -304,6 +470,7 @@ function ItemFormModal({
                             }))
                             .filter((s) => s.label.length > 0 && Number.isFinite(s.priceCents) && s.priceCents >= 0);
                         fd.set('sizes_json', JSON.stringify(validSizes));
+                        fd.set('customization_groups_json', JSON.stringify(draftsToGroupsJson(groups)));
                         onSubmitting(async () => {
                             await adminUpsertMenuItem(fd);
                             onClose();
@@ -439,6 +606,171 @@ function ItemFormModal({
                         )}
                     </div>
 
+                    {/* Customization groups editor */}
+                    <div className="space-y-3 pt-3 border-t border-[#f1ebd8]">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3d1d11]">
+                                    Customization groups
+                                </p>
+                                <p className="text-[11px] font-medium text-[#a08a7e]">
+                                    Wolt-style modifiers: single-pick (radio) or multi-pick (checkbox)
+                                    sections shown in the order modal.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={addGroup}
+                                className="inline-flex items-center gap-1.5 bg-[#fdf2e2] hover:bg-[#f1ebd8] text-[#3d1d11] rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-colors"
+                            >
+                                <Plus className="w-3 h-3" />
+                                Add group
+                            </button>
+                        </div>
+
+                        {groups.length === 0 ? (
+                            <p className="text-xs text-[#a08a7e] italic py-2">
+                                No customization groups.
+                            </p>
+                        ) : (
+                            <ul className="space-y-4">
+                                {groups.map((g, gIdx) => (
+                                    <li
+                                        key={g.id}
+                                        className="bg-[#fffcf8] border border-[#f1ebd8] rounded-2xl p-4 space-y-3"
+                                    >
+                                        {/* Group header row */}
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Group label (e.g. Valitse pohja)"
+                                                value={g.label}
+                                                onChange={(e) =>
+                                                    updateGroup(gIdx, { label: e.target.value })
+                                                }
+                                                className="form-input flex-1 font-bold"
+                                            />
+                                            <select
+                                                value={g.type}
+                                                onChange={(e) =>
+                                                    updateGroup(gIdx, {
+                                                        type: e.target.value as 'single' | 'multi',
+                                                    })
+                                                }
+                                                className="form-input w-32"
+                                            >
+                                                <option value="single">Single</option>
+                                                <option value="multi">Multi</option>
+                                            </select>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeGroup(gIdx)}
+                                                className="w-9 h-9 rounded-full text-[#a08a7e] hover:text-[#d35400] hover:bg-[#fdf2e2] flex items-center justify-center transition-colors flex-shrink-0"
+                                                aria-label="Remove group"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+
+                                        {/* Group settings */}
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <NumField
+                                                label="Min select"
+                                                value={g.minSelect}
+                                                onChange={(v) => updateGroup(gIdx, { minSelect: v })}
+                                            />
+                                            <NumField
+                                                label="Max select"
+                                                value={g.maxSelect}
+                                                onChange={(v) => updateGroup(gIdx, { maxSelect: v })}
+                                                disabled={g.type === 'single'}
+                                                placeholder={g.type === 'single' ? '1' : 'no cap'}
+                                            />
+                                            <NumField
+                                                label="Free quantity"
+                                                value={g.freeQuantity}
+                                                onChange={(v) => updateGroup(gIdx, { freeQuantity: v })}
+                                                disabled={g.type === 'single'}
+                                                placeholder={g.type === 'single' ? '—' : '0'}
+                                            />
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            placeholder="Helper text (e.g. Ensimmäiset 4 ovat ilmaisia)"
+                                            value={g.helperText}
+                                            onChange={(e) =>
+                                                updateGroup(gIdx, { helperText: e.target.value })
+                                            }
+                                            className="form-input text-xs"
+                                        />
+
+                                        {/* Options */}
+                                        <div className="space-y-2 pt-2 border-t border-[#f1ebd8]">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#a08a7e]">
+                                                    Options ({g.options.length})
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => addOption(gIdx)}
+                                                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#d35400] hover:text-[#3d1d11] transition-colors"
+                                                >
+                                                    <Plus className="w-3 h-3" />
+                                                    Add option
+                                                </button>
+                                            </div>
+
+                                            <ul className="space-y-1.5">
+                                                {g.options.map((o, oIdx) => (
+                                                    <li key={o.id} className="flex items-center gap-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Label (e.g. Jauheliha)"
+                                                            value={o.label}
+                                                            onChange={(e) =>
+                                                                updateOption(gIdx, oIdx, {
+                                                                    label: e.target.value,
+                                                                })
+                                                            }
+                                                            className="form-input flex-1"
+                                                        />
+                                                        <div className="relative w-24">
+                                                            <input
+                                                                type="number"
+                                                                step="0.01"
+                                                                min="0"
+                                                                placeholder="0.00"
+                                                                value={o.priceEuros}
+                                                                onChange={(e) =>
+                                                                    updateOption(gIdx, oIdx, {
+                                                                        priceEuros: e.target.value,
+                                                                    })
+                                                                }
+                                                                className="form-input pr-7"
+                                                            />
+                                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#a08a7e] pointer-events-none">
+                                                                €
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeOption(gIdx, oIdx)}
+                                                            className="w-8 h-8 rounded-full text-[#a08a7e] hover:text-[#d35400] hover:bg-[#fdf2e2] flex items-center justify-center transition-colors flex-shrink-0"
+                                                            aria-label="Remove option"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+
                     <div className="flex justify-end gap-3 pt-3 border-t border-[#f1ebd8]">
                         <button
                             type="button"
@@ -492,6 +824,35 @@ function Field({
                 {required && <span className="text-[#d35400]"> *</span>}
             </span>
             {children}
+        </label>
+    );
+}
+
+// Compact numeric input used for the customization group settings row.
+function NumField({
+    label, value, onChange, disabled, placeholder,
+}: {
+    label: string;
+    value: string;
+    onChange: (v: string) => void;
+    disabled?: boolean;
+    placeholder?: string;
+}) {
+    return (
+        <label className="block space-y-1">
+            <span className="text-[9px] font-black uppercase tracking-[0.15em] text-[#a08a7e]">
+                {label}
+            </span>
+            <input
+                type="number"
+                step="1"
+                min="0"
+                value={disabled ? '' : value}
+                onChange={(e) => onChange(e.target.value)}
+                disabled={disabled}
+                placeholder={placeholder}
+                className="form-input text-xs"
+            />
         </label>
     );
 }
