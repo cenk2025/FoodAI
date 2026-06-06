@@ -6,6 +6,33 @@ import {
     deleteMenuItem,
     getRestaurantById,
 } from '@/lib/direct-ordering/repository';
+import type { MenuItemSize } from '@/lib/direct-ordering/types';
+
+// sizes_json arrives from the admin form as a JSON string. We re-validate
+// each row here because the client could send anything; never trust it.
+function parseSizesJson(raw: string | undefined): MenuItemSize[] | undefined {
+    if (!raw) return undefined;
+    try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return undefined;
+        const cleaned: MenuItemSize[] = [];
+        for (const row of parsed) {
+            if (!row || typeof row !== 'object') continue;
+            const label = typeof row.label === 'string' ? row.label.trim() : '';
+            const priceCents = Number(row.priceCents);
+            if (!label) continue;
+            if (!Number.isFinite(priceCents) || priceCents < 0) continue;
+            const id =
+                typeof row.id === 'string' && row.id.length > 0
+                    ? row.id
+                    : `sz-${Math.random().toString(36).slice(2, 10)}`;
+            cleaned.push({ id, label, priceCents: Math.round(priceCents) });
+        }
+        return cleaned;
+    } catch {
+        return undefined;
+    }
+}
 
 // Admin actions guarded by the existing /admin middleware cookie. Same trust
 // boundary as the platform-admin pages — the middleware redirects unauth'd
@@ -29,6 +56,8 @@ export async function adminUpsertMenuItem(formData: FormData) {
     const restaurant = await getRestaurantById(restaurantId);
     if (!restaurant) return { ok: false, error: 'restaurant_not_found' as const };
 
+    const sizes = parseSizesJson(formData.get('sizes_json') as string | undefined);
+
     await upsertMenuItem({
         id,
         restaurantId,
@@ -40,6 +69,7 @@ export async function adminUpsertMenuItem(formData: FormData) {
         category,
         isAvailable,
         sortOrder,
+        sizes,
     });
 
     revalidatePath(`/admin/restaurants/${restaurantId}`);

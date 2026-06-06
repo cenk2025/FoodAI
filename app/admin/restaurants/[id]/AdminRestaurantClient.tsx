@@ -2,12 +2,32 @@
 
 import { useState, useTransition } from 'react';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
-import type { MenuItem, Order } from '@/lib/direct-ordering/types';
+import type { MenuItem, MenuItemSize, Order } from '@/lib/direct-ordering/types';
 import { formatEUR } from '@/lib/direct-ordering/CartContext';
 import {
     adminUpsertMenuItem,
     adminDeleteMenuItem,
 } from '../actions';
+
+// Local row shape used inside the form — price is stored as a string so the
+// numeric input stays controlled even while the user is typing partial values.
+type SizeDraft = {
+    id: string;
+    label: string;
+    priceEuros: string;
+};
+
+function makeSizeDraftId(): string {
+    return `sz-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function sizesToDrafts(sizes: MenuItemSize[] | undefined): SizeDraft[] {
+    return (sizes ?? []).map((s) => ({
+        id: s.id,
+        label: s.label,
+        priceEuros: (s.priceCents / 100).toFixed(2),
+    }));
+}
 
 type Props = {
     restaurantId: string;
@@ -229,6 +249,22 @@ function ItemFormModal({
     onClose: () => void;
     onSubmitting: (p: () => void) => void;
 }) {
+    const [sizes, setSizes] = useState<SizeDraft[]>(() => sizesToDrafts(item?.sizes));
+
+    const addSize = () =>
+        setSizes((prev) => [
+            ...prev,
+            { id: makeSizeDraftId(), label: '', priceEuros: '' },
+        ]);
+
+    const updateSize = (idx: number, patch: Partial<SizeDraft>) =>
+        setSizes((prev) =>
+            prev.map((s, i) => (i === idx ? { ...s, ...patch } : s)),
+        );
+
+    const removeSize = (idx: number) =>
+        setSizes((prev) => prev.filter((_, i) => i !== idx));
+
     return (
         <div
             className="fixed inset-0 z-[80] bg-black/50 backdrop-blur-sm flex items-center justify-center p-6"
@@ -253,10 +289,21 @@ function ItemFormModal({
                 </header>
 
                 <form
-                    className="p-6 space-y-4"
+                    className="p-6 space-y-4 max-h-[70vh] overflow-y-auto"
                     action={(fd) => {
                         fd.set('restaurantId', restaurantId);
                         if (item) fd.set('id', item.id);
+                        // Only send sizes_json when the admin actually has rows. An
+                        // empty/missing field tells the repository to leave the
+                        // sizes column untouched (preserves seed data).
+                        const validSizes = sizes
+                            .map((s) => ({
+                                id: s.id,
+                                label: s.label.trim(),
+                                priceCents: Math.round(Number(s.priceEuros) * 100),
+                            }))
+                            .filter((s) => s.label.length > 0 && Number.isFinite(s.priceCents) && s.priceCents >= 0);
+                        fd.set('sizes_json', JSON.stringify(validSizes));
                         onSubmitting(async () => {
                             await adminUpsertMenuItem(fd);
                             onClose();
@@ -325,6 +372,72 @@ function ItemFormModal({
                         />
                         Available
                     </label>
+
+                    {/* Sizes editor */}
+                    <div className="space-y-2 pt-3 border-t border-[#f1ebd8]">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3d1d11]">
+                                    Sizes
+                                </p>
+                                <p className="text-[11px] font-medium text-[#a08a7e]">
+                                    Optional. When set, the customer must pick a size and these prices replace the base.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={addSize}
+                                className="inline-flex items-center gap-1.5 bg-[#fdf2e2] hover:bg-[#f1ebd8] text-[#3d1d11] rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-colors"
+                            >
+                                <Plus className="w-3 h-3" />
+                                Add size
+                            </button>
+                        </div>
+
+                        {sizes.length === 0 ? (
+                            <p className="text-xs text-[#a08a7e] italic py-2">
+                                No sizes — item will use the base price above.
+                            </p>
+                        ) : (
+                            <ul className="space-y-2">
+                                {sizes.map((s, idx) => (
+                                    <li key={s.id} className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Label (e.g. Normaali 32 cm)"
+                                            value={s.label}
+                                            onChange={(e) => updateSize(idx, { label: e.target.value })}
+                                            className="form-input flex-1"
+                                        />
+                                        <div className="relative w-28">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                placeholder="0.00"
+                                                value={s.priceEuros}
+                                                onChange={(e) =>
+                                                    updateSize(idx, { priceEuros: e.target.value })
+                                                }
+                                                className="form-input pr-8"
+                                            />
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#a08a7e] pointer-events-none">
+                                                €
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeSize(idx)}
+                                            className="w-9 h-9 rounded-full text-[#a08a7e] hover:text-[#d35400] hover:bg-[#fdf2e2] flex items-center justify-center transition-colors flex-shrink-0"
+                                            aria-label="Remove size"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
 
                     <div className="flex justify-end gap-3 pt-3 border-t border-[#f1ebd8]">
                         <button
