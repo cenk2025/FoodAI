@@ -5,6 +5,7 @@ import {
     upsertMenuItem,
     deleteMenuItem,
     getRestaurantById,
+    upsertRestaurant,
 } from '@/lib/direct-ordering/repository';
 import type { MenuItemSize } from '@/lib/direct-ordering/types';
 
@@ -89,4 +90,73 @@ export async function adminDeleteMenuItem(formData: FormData) {
     revalidatePath(`/admin/restaurants/${restaurantId}`);
     revalidatePath(`/restaurant/${restaurant.slug}`);
     return { ok: true as const };
+}
+
+export type AdminRestaurantFormResult =
+    | { ok: true; id: string; slug: string }
+    | { ok: false; error: 'invalid_input' | 'duplicate_slug' | 'write_failed'; message?: string };
+
+function normalizeSlug(input: string): string {
+    return input
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')      // strip diacritics
+        .replace(/[^a-z0-9-]+/g, '-')         // non-alnum → dash
+        .replace(/-+/g, '-')                  // collapse dashes
+        .replace(/^-|-$/g, '');               // trim leading/trailing
+}
+
+export async function adminUpsertRestaurant(formData: FormData): Promise<AdminRestaurantFormResult> {
+    const id = formData.get('id') ? String(formData.get('id')) : undefined;
+    const name = String(formData.get('name') ?? '').trim();
+    const rawSlug = String(formData.get('slug') ?? '').trim();
+    const slug = normalizeSlug(rawSlug || name);
+    const description = String(formData.get('description') ?? '').trim();
+    const cityName = String(formData.get('cityName') ?? 'Jyväskylä').trim();
+    const address = String(formData.get('address') ?? '').trim();
+    const lat = Number(formData.get('lat') ?? NaN);
+    const lon = Number(formData.get('lon') ?? NaN);
+    const logoUrl = String(formData.get('logoUrl') ?? '').trim();
+    const coverUrl = String(formData.get('coverUrl') ?? '').trim();
+    const rating = Number(formData.get('rating') ?? 0);
+    const etaMin = Number(formData.get('etaMin') ?? 25);
+    const etaMax = Number(formData.get('etaMax') ?? 40);
+    const isActive = formData.get('isActive') === 'on';
+
+    if (!name || !slug) {
+        return { ok: false, error: 'invalid_input', message: 'name and slug are required' };
+    }
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+        return { ok: false, error: 'invalid_input', message: 'lat/lon must be numbers' };
+    }
+
+    const result = await upsertRestaurant({
+        id,
+        slug,
+        name,
+        description,
+        address,
+        lat,
+        lon,
+        logoUrl,
+        coverUrl,
+        rating: Number.isFinite(rating) ? rating : 0,
+        etaMin: Number.isFinite(etaMin) ? etaMin : 25,
+        etaMax: Number.isFinite(etaMax) ? etaMax : 40,
+        isActive,
+        cityName,
+    });
+
+    if (!result.ok) {
+        if (result.error === 'duplicate_slug') {
+            return { ok: false, error: 'duplicate_slug', message: `slug "${slug}" is already in use` };
+        }
+        return { ok: false, error: 'write_failed' };
+    }
+
+    revalidatePath('/admin/restaurants');
+    revalidatePath(`/admin/restaurants/${result.restaurant.id}`);
+    revalidatePath('/');
+    revalidatePath(`/restaurant/${result.restaurant.slug}`);
+    return { ok: true, id: result.restaurant.id, slug: result.restaurant.slug };
 }

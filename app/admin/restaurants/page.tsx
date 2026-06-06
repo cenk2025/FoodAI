@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, Store } from 'lucide-react';
 import { listRestaurants } from '@/lib/direct-ordering/repository';
+import AddRestaurantButton from './AddRestaurantButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,19 +11,22 @@ export default async function AdminRestaurantsPage() {
     return (
         <div className="min-h-screen bg-[#fffcf8] py-16 px-6">
             <div className="max-w-5xl mx-auto">
-                <div className="mb-10 space-y-1">
-                    <Link
-                        href="/admin"
-                        className="text-xs font-black uppercase tracking-[0.2em] text-[#a08a7e] hover:text-[#d35400] transition-colors"
-                    >
-                        ← Admin
-                    </Link>
-                    <h1 className="text-3xl font-black text-[#3d1d11] tracking-tight">
-                        Restaurants (direct ordering)
-                    </h1>
-                    <p className="text-[#a08a7e] font-medium">
-                        Manage menus and orders for restaurants selling directly through FoodAi.
-                    </p>
+                <div className="mb-10 flex items-end justify-between gap-6 flex-wrap">
+                    <div className="space-y-1">
+                        <Link
+                            href="/admin"
+                            className="text-xs font-black uppercase tracking-[0.2em] text-[#a08a7e] hover:text-[#d35400] transition-colors"
+                        >
+                            ← Admin
+                        </Link>
+                        <h1 className="text-3xl font-black text-[#3d1d11] tracking-tight">
+                            Restaurants (direct ordering)
+                        </h1>
+                        <p className="text-[#a08a7e] font-medium">
+                            Manage menus and orders for restaurants selling directly through FoodAi.
+                        </p>
+                    </div>
+                    <AddRestaurantButton />
                 </div>
 
                 {restaurants.length === 0 ? (

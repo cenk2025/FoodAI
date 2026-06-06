@@ -79,6 +79,107 @@ export async function getRestaurantById(id: string): Promise<DirectRestaurant | 
     }
 }
 
+export type UpsertRestaurantInput = Omit<DirectRestaurant, 'id' | 'city'> & {
+    id?: string;
+    cityName?: string;          // resolved to city_id in the join
+};
+
+export type UpsertRestaurantResult =
+    | { ok: true; restaurant: DirectRestaurant }
+    | { ok: false; error: 'duplicate_slug' | 'write_failed' };
+
+export async function upsertRestaurant(
+    input: UpsertRestaurantInput,
+): Promise<UpsertRestaurantResult> {
+    if (!(isSupabaseConfigured() && hasServiceRole())) {
+        // In-memory fallback (best-effort — no slug uniqueness check beyond
+        // what the store enforces).
+        const r = mem.mem_upsertRestaurant({ ...input, id: input.id });
+        return { ok: true, restaurant: r };
+    }
+
+    try {
+        const sb = createServiceClient();
+
+        // Resolve city_id from cityName (insert the city if it doesn't exist
+        // yet — matches the seed migration's pattern).
+        let cityId: string | null = null;
+        const cityName = input.cityName?.trim() || input.city?.trim() || null;
+        if (cityName) {
+            const existing = await sb
+                .from('cities')
+                .select('id')
+                .eq('name', cityName)
+                .maybeSingle();
+            if (existing.data?.id) {
+                cityId = existing.data.id;
+            } else {
+                const created = await sb
+                    .from('cities')
+                    .insert({ name: cityName, country_code: 'FI' })
+                    .select('id')
+                    .single();
+                cityId = created.data?.id ?? null;
+            }
+        }
+
+        const row: Record<string, unknown> = {
+            slug: input.slug,
+            name: input.name,
+            description: input.description || null,
+            city_id: cityId,
+            address: input.address || null,
+            lat: input.lat,
+            lon: input.lon,
+            logo_url: input.logoUrl || null,
+            cover_url: input.coverUrl || null,
+            rating: input.rating,
+            eta_min: input.etaMin,
+            eta_max: input.etaMax,
+            is_active: input.isActive,
+            updated_at: new Date().toISOString(),
+        };
+
+        const query = input.id
+            ? sb.from('direct_restaurants').update(row).eq('id', input.id).select().single()
+            : sb.from('direct_restaurants').insert(row).select().single();
+        const { data, error } = await query;
+
+        if (error) {
+            // Postgres unique-violation code is 23505
+            if ((error as { code?: string }).code === '23505') {
+                return { ok: false, error: 'duplicate_slug' };
+            }
+            console.warn('[direct-ordering] direct_restaurants upsert failed', error);
+            return { ok: false, error: 'write_failed' };
+        }
+        if (!data) return { ok: false, error: 'write_failed' };
+
+        // For new restaurants, also provision a sensible default delivery zone
+        // centered on the restaurant. Admin can edit it later from the
+        // restaurant detail page (future iteration).
+        if (!input.id) {
+            const { error: zoneErr } = await sb.from('delivery_zones').insert({
+                restaurant_id: data.id,
+                center_lat: input.lat,
+                center_lon: input.lon,
+                radius_m: 5000,
+                fee_cents: 290,
+                min_order_cents: 1500,
+                allowed_postal_codes: [],
+            });
+            if (zoneErr) {
+                console.warn('[direct-ordering] default delivery_zone insert failed', zoneErr);
+            }
+        }
+
+        return { ok: true, restaurant: rowToRestaurant(data as RestaurantRow) };
+    } catch (e) {
+        console.warn('[direct-ordering] upsertRestaurant threw', e);
+        return { ok: false, error: 'write_failed' };
+    }
+}
+
 // --- menu items ------------------------------------------------------------
 
 export async function listMenuItems(restaurantId: string): Promise<MenuItem[]> {

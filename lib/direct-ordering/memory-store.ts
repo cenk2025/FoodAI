@@ -58,6 +58,28 @@ export function mem_getRestaurantById(id: string): DirectRestaurant | null {
     return getStore().restaurants.get(id) ?? null;
 }
 
+export function mem_upsertRestaurant(
+    input: Omit<DirectRestaurant, 'id'> & { id?: string },
+): DirectRestaurant {
+    const store = getStore();
+    const id = input.id ?? `rest-${randomUUID()}`;
+    const restaurant: DirectRestaurant = { ...input, id };
+    store.restaurants.set(id, restaurant);
+    // Provision a default zone on first creation if one doesn't already exist.
+    if (!store.zones.has(id)) {
+        store.zones.set(id, {
+            restaurantId: id,
+            centerLat: input.lat,
+            centerLon: input.lon,
+            radiusM: 5000,
+            feeCents: 290,
+            minOrderCents: 1500,
+            allowedPostalCodes: [],
+        });
+    }
+    return restaurant;
+}
+
 // --- menu items ------------------------------------------------------------
 
 export function mem_listMenuItems(restaurantId: string): MenuItem[] {
