@@ -12,7 +12,7 @@ import { TrendingDown, Clock, Star, ChevronRight, MapPin } from 'lucide-react'
 import Footer from '@/components/layout/Footer'
 import OfferPreview from '@/components/offers/OfferPreview'
 import { useLocation } from '@/lib/context/LocationContext'
-import HomepagePizzaPizzaCard from '@/components/direct-ordering/HomepagePizzaPizzaCard'
+import HomepageDirectRestaurants from '@/components/direct-ordering/HomepageDirectRestaurants'
 
 export default function HomePage() {
   const { city } = useLocation()
@@ -408,7 +408,7 @@ export default function HomePage() {
             )}
 
             {/* Direct-order partner spotlight (additive — separate from the aggregator feed) */}
-            <HomepagePizzaPizzaCard />
+            <HomepageDirectRestaurants />
 
             {/* Daily Best Deals - Responsive Grid */}
             <section>

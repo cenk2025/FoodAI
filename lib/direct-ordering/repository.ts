@@ -36,7 +36,7 @@ export async function listRestaurants(): Promise<DirectRestaurant[]> {
         if (!sb) return mem.mem_listRestaurants();
         const { data, error } = await sb
             .from('direct_restaurants')
-            .select('*')
+            .select('*, cities(name)')
             .eq('is_active', true);
         if (error || !data) return mem.mem_listRestaurants();
         return data.map(rowToRestaurant);
@@ -52,7 +52,7 @@ export async function getRestaurantBySlug(slug: string): Promise<DirectRestauran
         if (!sb) return mem.mem_getRestaurantBySlug(slug);
         const { data, error } = await sb
             .from('direct_restaurants')
-            .select('*')
+            .select('*, cities(name)')
             .eq('slug', slug)
             .maybeSingle();
         if (error || !data) return mem.mem_getRestaurantBySlug(slug);
@@ -69,7 +69,7 @@ export async function getRestaurantById(id: string): Promise<DirectRestaurant | 
         if (!sb) return mem.mem_getRestaurantById(id);
         const { data, error } = await sb
             .from('direct_restaurants')
-            .select('*')
+            .select('*, cities(name)')
             .eq('id', id)
             .maybeSingle();
         if (error || !data) return mem.mem_getRestaurantById(id);
@@ -526,6 +526,9 @@ type RestaurantRow = {
     address: string | null; lat: number | null; lon: number | null;
     logo_url: string | null; cover_url: string | null; rating: number | null;
     eta_min: number | null; eta_max: number | null; is_active: boolean;
+    // `cities(name)` join — Supabase returns the embedded relation as an
+    // object (or null when city_id is null).
+    cities?: { name: string } | null;
 };
 
 function rowToRestaurant(r: RestaurantRow): DirectRestaurant {
@@ -534,7 +537,7 @@ function rowToRestaurant(r: RestaurantRow): DirectRestaurant {
         slug: r.slug,
         name: r.name,
         description: r.description ?? '',
-        city: 'Jyväskylä', // city resolution skipped in scaffold — restaurant is hardcoded to Jyväskylä
+        city: r.cities?.name ?? 'Jyväskylä',
         address: r.address ?? '',
         lat: Number(r.lat ?? 0),
         lon: Number(r.lon ?? 0),
