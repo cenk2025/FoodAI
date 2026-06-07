@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Clock, Star, MapPin, Bike } from 'lucide-react';
 import type { DirectRestaurant, MenuItem, DeliveryZone } from '@/lib/direct-ordering/types';
 import { useCart, formatEUR } from '@/lib/direct-ordering/CartContext';
+import { UBER_EATS_DELIVERY_FEE_CENTS } from '@/lib/direct-ordering/constants';
 import { useLanguage } from '@/lib/i18n/context';
 import MenuItemCard from './MenuItemCard';
 import MenuItemDetailModal from './MenuItemDetailModal';
@@ -95,7 +96,7 @@ export default function RestaurantClient({ restaurant, menuItems, zone }: Props)
                                 {t.direct.restaurant.delivery_fee}
                             </p>
                             <p className="text-sm font-black text-[#3d1d11]">
-                                {zone ? formatEUR(zone.feeCents) : '—'}
+                                {formatEUR(UBER_EATS_DELIVERY_FEE_CENTS)}
                             </p>
                         </div>
                     </div>

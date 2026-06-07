@@ -7,6 +7,7 @@ import type {
     OrderItem,
 } from './types';
 import { PIZZAPIZZA, PIZZAPIZZA_MENU, PIZZAPIZZA_ZONE } from './seed';
+import { DEFAULT_COMMISSION_RATE_BPS, computeCommissionCents } from './constants';
 
 // Module-level singleton. Survives between requests within a single Node
 // process (i.e. one `next dev` run); reset on every restart. Good enough for
@@ -117,17 +118,24 @@ export function mem_upsertDeliveryZone(zone: DeliveryZone): DeliveryZone {
 // --- orders ----------------------------------------------------------------
 
 export function mem_createOrder(
-    input: Omit<Order, 'id' | 'createdAt' | 'status' | 'paymentStatus'> & {
+    input: Omit<Order, 'id' | 'createdAt' | 'status' | 'paymentStatus' | 'commissionRateBps' | 'commissionCents'> & {
         status?: Order['status'];
         paymentStatus?: Order['paymentStatus'];
+        commissionRateBps?: number;
+        commissionCents?: number;
     }
 ): Order {
+    const commissionRateBps = input.commissionRateBps ?? DEFAULT_COMMISSION_RATE_BPS;
+    const commissionCents =
+        input.commissionCents ?? computeCommissionCents(input.subtotalCents, commissionRateBps);
     const order: Order = {
         ...input,
         id: `ord-${randomUUID()}`,
         createdAt: new Date().toISOString(),
         status: input.status ?? 'pending',
         paymentStatus: input.paymentStatus ?? 'unpaid',
+        commissionRateBps,
+        commissionCents,
     };
     getStore().orders.set(order.id, order);
     return order;

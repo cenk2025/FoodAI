@@ -127,6 +127,10 @@ export type Order = {
     deliveryFeeCents: number;
     totalCents: number;
     currency: string;
+    /** Basis points (1000 = 10%). Snapshotted at order time. */
+    commissionRateBps: number;
+    /** FoodAi's share of this order, in cents. Snapshotted at order time. */
+    commissionCents: number;
     status: OrderStatus;
     paymentStatus: PaymentStatus;
     paymentProvider?: string;

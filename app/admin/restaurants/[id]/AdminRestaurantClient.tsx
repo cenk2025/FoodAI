@@ -17,6 +17,7 @@ import {
     adminDeleteMenuItem,
 } from '../actions';
 import DeliveryZoneEditor from './DeliveryZoneEditor';
+import CommissionStats from './CommissionStats';
 
 // Local row shape used inside the form — price is stored as a string so the
 // numeric input stays controlled even while the user is typing partial values.
@@ -141,6 +142,9 @@ export default function AdminRestaurantClient({ restaurant, menuItems, orders, z
 
     return (
         <div className="space-y-8">
+            {/* Commission stat strip */}
+            <CommissionStats orders={orders} />
+
             {/* Tabs */}
             <div className="flex gap-2 border-b border-[#f1ebd8]">
                 <TabButton active={tab === 'menu'} onClick={() => setTab('menu')}>
@@ -246,6 +250,7 @@ export default function AdminRestaurantClient({ restaurant, menuItems, orders, z
                                         <th className="px-6 py-4 text-left">Address</th>
                                         <th className="px-6 py-4 text-left">Items</th>
                                         <th className="px-6 py-4 text-right">Total</th>
+                                        <th className="px-6 py-4 text-right">Commission</th>
                                         <th className="px-6 py-4 text-left">Status</th>
                                         <th className="px-6 py-4 text-left">Placed</th>
                                     </tr>
@@ -284,6 +289,12 @@ export default function AdminRestaurantClient({ restaurant, menuItems, orders, z
                                             </td>
                                             <td className="px-6 py-4 text-right font-black text-[#3d1d11]">
                                                 {formatEUR(o.totalCents)}
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-black text-[#d35400]">
+                                                {formatEUR(o.commissionCents)}
+                                                <div className="text-[10px] font-bold text-[#a08a7e]">
+                                                    {(o.commissionRateBps / 100).toFixed(1)}% × {formatEUR(o.subtotalCents)}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="text-[10px] font-black uppercase tracking-widest bg-[#fdf2e2] text-[#3d1d11] px-2 py-1 rounded-lg">

@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DeliveryZone } from '@/lib/direct-ordering/types';
 import { adminUpsertDeliveryZone, type AdminDeliveryZoneResult } from '../actions';
+import { UBER_EATS_DELIVERY_FEE_CENTS } from '@/lib/direct-ordering/constants';
+import { formatEUR } from '@/lib/direct-ordering/CartContext';
 
 // Settings-tab card: edit the delivery zone for this restaurant. Postal codes
 // are entered as a comma- or newline-separated list; the server splits and
@@ -79,7 +81,7 @@ export default function DeliveryZoneEditor({
                     </Field>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                     <Field label="Radius (m)" required>
                         <input
                             name="radiusM"
@@ -88,17 +90,6 @@ export default function DeliveryZoneEditor({
                             min="100"
                             required
                             defaultValue={initial.radiusM}
-                            className="form-input"
-                        />
-                    </Field>
-                    <Field label="Delivery fee (€)" required>
-                        <input
-                            name="feeEuros"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            required
-                            defaultValue={(initial.feeCents / 100).toFixed(2)}
                             className="form-input"
                         />
                     </Field>
@@ -113,6 +104,24 @@ export default function DeliveryZoneEditor({
                             className="form-input"
                         />
                     </Field>
+                </div>
+
+                {/* Delivery fee no longer per-restaurant — kept for parity with
+                    the existing zone shape but reported back as a read-only
+                    info row. We still post the platform fee so the server keeps
+                    the row in a consistent state. */}
+                <input type="hidden" name="feeEuros" value={(UBER_EATS_DELIVERY_FEE_CENTS / 100).toFixed(2)} />
+                <div className="bg-[#fdf2e2]/60 border border-[#f1ebd8] rounded-2xl px-4 py-3 text-xs font-bold text-[#3d1d11] space-y-0.5">
+                    <p>
+                        Delivery fee:{' '}
+                        <span className="text-[#d35400]">
+                            {formatEUR(UBER_EATS_DELIVERY_FEE_CENTS)}
+                        </span>{' '}
+                        — fixed by FoodAi (Uber Eats logistics)
+                    </p>
+                    <p className="font-medium text-[#a08a7e]">
+                        Charged on top of the order subtotal. Restaurants don&apos;t set their own delivery fee.
+                    </p>
                 </div>
 
                 <Field

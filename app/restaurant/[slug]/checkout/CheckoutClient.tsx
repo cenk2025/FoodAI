@@ -10,6 +10,7 @@ import type {
     DeliveryZone,
 } from '@/lib/direct-ordering/types';
 import { computeUnitPrice, formatEUR, useCart } from '@/lib/direct-ordering/CartContext';
+import { UBER_EATS_DELIVERY_FEE_CENTS } from '@/lib/direct-ordering/constants';
 import { checkDeliveryZone, type ZoneCheckResult } from '@/lib/direct-ordering/delivery-zone';
 import { useLanguage } from '@/lib/i18n/context';
 import { placeOrder, type PlaceOrderResult } from './actions';
@@ -42,10 +43,9 @@ export default function CheckoutClient({ restaurant, menuItems, zone }: Props) {
         setMenu(menuItems);
     }, [restaurant.slug, menuItems, setActiveRestaurantSlug, setMenu]);
 
-    const deliveryFee = useMemo(
-        () => (zoneCheck?.inZone ? zoneCheck.feeCents : (zone?.feeCents ?? 0)),
-        [zoneCheck, zone],
-    );
+    // Delivery is Uber Eats for every direct order; the fee is a flat
+    // platform-wide value (see lib/direct-ordering/constants.ts).
+    const deliveryFee = UBER_EATS_DELIVERY_FEE_CENTS;
     const total = subtotalCents + (zoneCheck?.inZone ? deliveryFee : 0);
 
     const minOrder = zone?.minOrderCents ?? 0;

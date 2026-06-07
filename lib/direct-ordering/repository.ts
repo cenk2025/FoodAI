@@ -8,6 +8,7 @@ import type {
     Order,
     OrderItem,
 } from './types';
+import { DEFAULT_COMMISSION_RATE_BPS, computeCommissionCents } from './constants';
 
 // Repository facade: tries Supabase first; if env is missing or any call fails,
 // transparently falls back to the in-memory store. Lets the rest of the app
@@ -327,11 +328,17 @@ export async function upsertDeliveryZone(zone: DeliveryZone): Promise<DeliveryZo
 // --- orders ----------------------------------------------------------------
 
 export async function createOrder(
-    input: Omit<Order, 'id' | 'createdAt' | 'status' | 'paymentStatus'> & {
+    input: Omit<Order, 'id' | 'createdAt' | 'status' | 'paymentStatus' | 'commissionRateBps' | 'commissionCents'> & {
         status?: Order['status'];
         paymentStatus?: Order['paymentStatus'];
+        commissionRateBps?: number;
+        commissionCents?: number;
     }
 ): Promise<Order> {
+    const commissionRateBps = input.commissionRateBps ?? DEFAULT_COMMISSION_RATE_BPS;
+    const commissionCents =
+        input.commissionCents ?? computeCommissionCents(input.subtotalCents, commissionRateBps);
+
     if (isSupabaseConfigured() && hasServiceRole()) {
         try {
             const sb = createServiceClient();
@@ -351,6 +358,8 @@ export async function createOrder(
                 currency: input.currency,
                 status: input.status ?? 'pending',
                 payment_status: input.paymentStatus ?? 'unpaid',
+                commission_rate_bps: commissionRateBps,
+                commission_cents: commissionCents,
             };
             const { data: orderData, error: orderErr } = await sb
                 .from('direct_orders')
@@ -359,7 +368,7 @@ export async function createOrder(
                 .single();
             if (orderErr || !orderData) {
                 console.warn('[direct-ordering] direct_orders insert failed, using in-memory', orderErr);
-                return mem.mem_createOrder(input);
+                return mem.mem_createOrder({ ...input, commissionRateBps, commissionCents });
             }
 
             const itemRows = input.items.map((it) => ({
@@ -382,7 +391,7 @@ export async function createOrder(
             console.warn('[direct-ordering] createOrder threw, using in-memory', e);
         }
     }
-    return mem.mem_createOrder(input);
+    return mem.mem_createOrder({ ...input, commissionRateBps, commissionCents });
 }
 
 export async function listOrders(restaurantId: string): Promise<Order[]> {
@@ -467,6 +476,7 @@ type OrderRow = {
     customer_email: string | null; delivery_address: string; delivery_postal_code: string | null;
     delivery_lat: number | null; delivery_lon: number | null; notes: string | null;
     subtotal_cents: number; delivery_fee_cents: number; total_cents: number; currency: string;
+    commission_rate_bps: number | null; commission_cents: number | null;
     status: Order['status']; payment_status: Order['paymentStatus'];
     payment_provider: string | null; payment_reference: string | null;
     delivery_provider: string | null; delivery_reference: string | null;
@@ -495,6 +505,7 @@ function orderItemRowToItem(r: OrderItemRow): OrderItem {
 }
 
 function rowToOrder(r: OrderRow, items: OrderItem[]): Order {
+    const rate = r.commission_rate_bps ?? DEFAULT_COMMISSION_RATE_BPS;
     return {
         id: r.id,
         restaurantId: r.restaurant_id,
@@ -511,6 +522,8 @@ function rowToOrder(r: OrderRow, items: OrderItem[]): Order {
         deliveryFeeCents: r.delivery_fee_cents,
         totalCents: r.total_cents,
         currency: r.currency,
+        commissionRateBps: rate,
+        commissionCents: r.commission_cents ?? computeCommissionCents(r.subtotal_cents, rate),
         status: r.status,
         paymentStatus: r.payment_status,
         paymentProvider: r.payment_provider ?? undefined,

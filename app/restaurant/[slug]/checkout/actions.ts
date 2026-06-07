@@ -12,6 +12,7 @@ import {
 import { checkDeliveryZone } from '@/lib/direct-ordering/delivery-zone';
 import { shopifyPayments } from '@/lib/integrations/payments/shopify';
 import { uberEatsDelivery } from '@/lib/integrations/delivery/uber-eats-delivery';
+import { UBER_EATS_DELIVERY_FEE_CENTS } from '@/lib/direct-ordering/constants';
 import type {
     OrderItem,
     OrderOptionSnapshot,
@@ -117,7 +118,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         return { ok: false, error: 'below_minimum' };
     }
 
-    const deliveryFeeCents = zoneCheck.feeCents;
+    // Delivery is handled by Uber Eats for every direct order, with a flat
+    // platform-wide fee. The zone.feeCents value (if any) is ignored here.
+    const deliveryFeeCents = UBER_EATS_DELIVERY_FEE_CENTS;
     const totalCents = subtotalCents + deliveryFeeCents;
 
     const order = await createOrder({
